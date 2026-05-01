@@ -1,0 +1,16 @@
+server:
+  port: 8080
+  host: 0.0.0.0
+
+database:
+  # Relative to this file (not the process working directory), so Air/IDE cwd still finds the same DB.
+  path: ./pressbin.db
+
+site:
+  title: "My Blog"
+  description: "Writing about Go and things."
+  url: "https://pressbin.in"
+  posts_per_page: 10
+
+log:
+  level: info

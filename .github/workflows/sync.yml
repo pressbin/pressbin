@@ -1,0 +1,34 @@
+name: Sync posts to Pressbin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "posts/**/*.md"
+      - "posts/*.md"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Install dependencies
+        run: pip install requests pyyaml
+
+      - name: Sync changed posts
+        env:
+          PRESSBIN_URL: ${{ secrets.PRESSBIN_URL }}
+          PRESSBIN_KEY: ${{ secrets.PRESSBIN_KEY }}
+        run: |
+          set -e
+          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
+            git diff --name-only HEAD~1 HEAD -- 'posts/*.md' 'posts/**/*.md' | while read -r file; do
+              [ -z "$file" ] && continue
+              [ -f "$file" ] || continue
+              echo "Syncing $file..."
+              python3 .github/scripts/push.py "$file"
+            done
+          fi

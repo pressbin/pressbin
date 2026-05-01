@@ -1,0 +1,7 @@
+/tmp/
+tmp/
+bin/
+*.db
+*.db-shm
+*.db-wal
+build-errors.log

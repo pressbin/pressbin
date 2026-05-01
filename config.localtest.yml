@@ -1,0 +1,15 @@
+server:
+  port: 18089
+  host: 0.0.0.0
+
+database:
+  path: ./pressbin.db
+
+site:
+  title: "My Blog"
+  description: "Writing about Go and things."
+  url: "https://pressbin.in"
+  posts_per_page: 10
+
+log:
+  level: info
