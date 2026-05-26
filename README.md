@@ -47,10 +47,20 @@ make migrate
 
 ## Releases
 
-Pushes and PRs run `.github/workflows/release.yml` (`go vet`, `go test`, smoke
-build). **Stable** tag pushes (`v1.0.0`, `v1.1.1`, etc.) automatically build
-all platforms and create a GitHub Release. Pre-release tags (`v1.0.0-beta`,
-`v1.0.0-alpha.1`, `v1.0.0-rc.1`) run checks only — no release upload.
+Pushes and PRs run [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+[`.github/workflows/release.yml`](.github/workflows/release.yml) (**Build and Release**) runs on:
+
+- Tag push `v*` **without** `alpha` or `beta` in the name (e.g. `v1.0.0`, `v1.1.1`) → builds all platforms and publishes a GitHub Release
+- Tags like `v1.0.0-beta` or `v1.0.0-alpha.1` → workflow does not run
+- **workflow_dispatch** → builds with a custom embedded version (optional input); no release unless you tagged
+
+Manual build:
+
+```bash
+# Actions → Build and Release → Run workflow
+# Optional version: v1.0.0-rc1 or sha-abc1234
+```
 
 Download from [GitHub Releases](https://github.com/pressbin/pressbin/releases).
 Use `config.yml.example` at the repo root as your starting config.

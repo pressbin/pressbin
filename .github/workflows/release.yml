@@ -1,26 +1,49 @@
-name: CI and Release
+name: Build and Release
 
 on:
   push:
-    branches: [main]
-    tags: ["v*"]
-  pull_request:
-    branches: [main]
-
-# Stable release: v1.0.0, v1.1.1 (not v1.0.0-beta, v1.0.0-alpha.1, v1.0.0-rc.1)
-permissions:
-  contents: write
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Embedded build version (e.g. v1.0.0-rc1 or sha-abc1234)'
+        required: false
+        default: ''
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (github.ref_type == 'tag'
+      && !contains(github.ref_name, 'alpha')
+      && !contains(github.ref_name, 'beta'))
+    permissions:
+      contents: write
 
-      - uses: actions/setup-go@v5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
+
+      - name: Resolve build version
+        id: version
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VER='${{ github.ref_name }}'
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            VER='${{ github.event.inputs.version }}'
+          else
+            VER="sha-$(git rev-parse --short HEAD)"
+          fi
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "Building with embedded version: $VER"
 
       - name: Vet
         run: go vet ./...
@@ -28,35 +51,32 @@ jobs:
       - name: Test
         run: go test ./...
 
-      - name: Smoke build
-        if: github.ref_type != 'tag'
-        run: go build -ldflags="-s -w" -o pressbin .
-
-      - name: Build release binaries
-        if: github.ref_type == 'tag' && matches(github.ref_name, '^v[0-9]+\.[0-9]+\.[0-9]+$')
+      - name: Build binaries
         run: |
           chmod +x scripts/build-release.sh
-          scripts/build-release.sh "${{ github.ref_name }}"
+          scripts/build-release.sh "${{ steps.version.outputs.version }}"
 
       - name: Generate checksums
-        if: github.ref_type == 'tag' && matches(github.ref_name, '^v[0-9]+\.[0-9]+\.[0-9]+$')
         run: |
           cd dist
-          sha256sum * > checksums.txt
+          sha256sum pressbin-* > checksums.txt
 
       - name: Create GitHub Release
-        if: github.ref_type == 'tag' && matches(github.ref_name, '^v[0-9]+\.[0-9]+\.[0-9]+$')
+        if: github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          generate_release_notes: true
+          prerelease: false
           files: |
             dist/*
-          generate_release_notes: true
           body: |
             ## Pressbin ${{ github.ref_name }}
 
-            ### Download
-            Pick the binary for your platform:
+            Version is embedded at link time (`main.Version`).
 
+            ### Download
             | Platform | File |
             |---|---|
             | Linux x64 (most VPS) | `pressbin-linux-amd64` |
@@ -67,9 +87,11 @@ jobs:
 
             Copy [config.yml.example](https://github.com/${{ github.repository }}/blob/main/config.yml.example) to `config.yml`, then run `./pressbin --config config.yml`.
 
-            For git-push publishing, use the [blog content template](https://github.com/pressbin/pressbin-blog-template) (sync workflow + `push.py`).
+            For git-push publishing, use the [blog content template](https://github.com/pressbin/pressbin-blog-template).
 
             ### Verify checksum
             ```bash
             sha256sum -c checksums.txt
             ```
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
