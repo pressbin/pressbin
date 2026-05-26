@@ -4,7 +4,7 @@ import (
 	g "maragu.dev/gomponents"
 	h "maragu.dev/gomponents/html"
 
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 func TagPage(tag string, posts []store.Post, pd PageData, page, totalPages int) g.Node {

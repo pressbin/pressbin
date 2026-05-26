@@ -4,7 +4,7 @@ import (
 	g "maragu.dev/gomponents"
 	h "maragu.dev/gomponents/html"
 
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 func SearchResults(posts []store.Post, query string) g.Node {

@@ -45,16 +45,38 @@ cd pressbin_api
 make migrate
 ```
 
+## Releases
+
+Tagged pushes (`v*`) run `.github/workflows/release.yml`, which builds
+self-contained binaries for linux/darwin/windows (amd64 + arm64 where
+applicable), plus `checksums.txt`.
+
+Download from [GitHub Releases](https://github.com/pressbin/pressbin/releases).
+Use `config.yml.example` at the repo root as your starting config.
+
+Local build:
+
+```bash
+make release              # all platforms → dist/
+make release-bundle       # optional tarball with config + sync workflow
+./bin/pressbin version    # after make build (shows dev unless ldflags set)
+```
+
 ## Content sync (GitHub Action)
 
-The repo includes:
+For a **separate content repo**, use [`../pressbin_blog_template/`](../pressbin_blog_template/)
+(or copy `templates/consumer/` — kept in sync with the template). Tags live in
+each post’s YAML front matter; see the template README for layout and conventions.
 
-- `pressbin_api/.github/workflows/sync.yml`
-- `pressbin_api/.github/scripts/push.py`
+That template mirrors the sync setup in this repo:
 
-Secrets needed in GitHub:
+- `.github/workflows/sync.yml` (this repo — for dogfooding sync from `posts/` if
+  added)
+- `.github/scripts/push.py`
 
-- `PRESSBIN_URL` (e.g. `https://pressbin.in`)
+Secrets needed in the content repo on GitHub:
+
+- `PRESSBIN_URL` (e.g. `https://pressbin.dev`)
 - `PRESSBIN_KEY` (a `pb_sync_...` key created via the admin API)
 
 ## Admin API

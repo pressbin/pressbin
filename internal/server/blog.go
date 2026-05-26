@@ -7,7 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"pressbin.in/pressbin/internal/render"
+	"pressbin.dev/pressbin/internal/render"
 )
 
 func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) {
@@ -41,6 +41,18 @@ func (s *Server) handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 	pd := s.pageData()
 	html := render.PostPage(post, pd)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_ = html.Render(w)
+}
+
+func (s *Server) handleTags(w http.ResponseWriter, r *http.Request) {
+	tags, err := s.store.AllTags()
+	if err != nil {
+		writeError(w, 500, "failed to list tags")
+		return
+	}
+	pd := s.pageData()
+	html := render.TagsPage(tags, pd)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	_ = html.Render(w)
 }

@@ -1,4 +1,4 @@
-module pressbin.in/pressbin
+module pressbin.dev/pressbin
 
 go 1.22
 

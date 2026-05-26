@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 func (s *Server) requireAuth(permission string) func(http.Handler) http.Handler {

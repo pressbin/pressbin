@@ -1,6 +1,7 @@
 # Pressbin — Solo Build Guide
-> Single binary blog engine. Go + SQLite + Markdown + Git push-to-live.
-> Domain: pressbin.in
+
+> Single binary blog engine. Go + SQLite + Markdown + Git push-to-live. Domain:
+> pressbin.dev
 
 ---
 
@@ -26,9 +27,13 @@
 
 ## 1. Project Overview
 
-Pressbin is a self-contained blog engine compiled into a single binary. You write posts in Markdown, store them in a GitHub repo, and a GitHub Action pushes them to the binary via a signed API call. The binary stores everything in SQLite and serves it fast.
+Pressbin is a self-contained blog engine compiled into a single binary. You
+write posts in Markdown, store them in a GitHub repo, and a GitHub Action pushes
+them to the binary via a signed API call. The binary stores everything in SQLite
+and serves it fast.
 
 **Core promises:**
+
 - One binary + one config file = full deployment
 - No PHP, Node, Docker, or separate DB on the server
 - Git is the source of truth for content
@@ -38,22 +43,22 @@ Pressbin is a self-contained blog engine compiled into a single binary. You writ
 
 ## 2. Tech Stack
 
-| Layer | Library | Version | Why |
-|---|---|---|---|
-| Language | Go | 1.22+ | Single binary compilation |
-| HTTP Router | `github.com/go-chi/chi/v5` | v5 | Standard net/http, composable |
-| HTML Rendering | `maragu.dev/gomponents` | latest | Pure Go, no runtime panics |
-| CSS | TailwindCSS | CDN (dev) | Utility classes in Go components |
-| JS | HTMX | CDN | Search box, zero custom JS |
-| Icons | `github.com/eduardolat/gomponents-lucide` | latest | Clean SVG icons |
-| SQLite | `modernc.org/sqlite` | latest | Pure Go, no CGO, truly single binary |
-| Markdown | `github.com/yuin/goldmark` | latest | Extensible, standard |
-| Front Matter | `github.com/yuin/goldmark-meta` | latest | Pairs with goldmark |
-| Config | `github.com/knadh/koanf/v2` | v2 | Lighter than Viper |
-| Logging | `log/slog` | stdlib | Built-in since Go 1.21 |
-| Auth | `crypto/hmac` | stdlib | HMAC signing, no deps |
-| Password Hash | `golang.org/x/crypto/bcrypt` | latest | For API key hashing |
-| IDs | `github.com/jaevor/go-nanoid` | latest | Short unique IDs for keys |
+| Layer          | Library                                   | Version   | Why                                  |
+| -------------- | ----------------------------------------- | --------- | ------------------------------------ |
+| Language       | Go                                        | 1.22+     | Single binary compilation            |
+| HTTP Router    | `github.com/go-chi/chi/v5`                | v5        | Standard net/http, composable        |
+| HTML Rendering | `maragu.dev/gomponents`                   | latest    | Pure Go, no runtime panics           |
+| CSS            | TailwindCSS                               | CDN (dev) | Utility classes in Go components     |
+| JS             | HTMX                                      | CDN       | Search box, zero custom JS           |
+| Icons          | `github.com/eduardolat/gomponents-lucide` | latest    | Clean SVG icons                      |
+| SQLite         | `modernc.org/sqlite`                      | latest    | Pure Go, no CGO, truly single binary |
+| Markdown       | `github.com/yuin/goldmark`                | latest    | Extensible, standard                 |
+| Front Matter   | `github.com/yuin/goldmark-meta`           | latest    | Pairs with goldmark                  |
+| Config         | `github.com/knadh/koanf/v2`               | v2        | Lighter than Viper                   |
+| Logging        | `log/slog`                                | stdlib    | Built-in since Go 1.21               |
+| Auth           | `crypto/hmac`                             | stdlib    | HMAC signing, no deps                |
+| Password Hash  | `golang.org/x/crypto/bcrypt`              | latest    | For API key hashing                  |
+| IDs            | `github.com/jaevor/go-nanoid`             | latest    | Short unique IDs for keys            |
 
 ### go.mod starting point
 
@@ -134,7 +139,8 @@ pressbin/
 
 ## 4. Database Schema
 
-Three files to create in `internal/store/store.go` as migration strings run on startup.
+Three files to create in `internal/store/store.go` as migration strings run on
+startup.
 
 ```sql
 -- Posts
@@ -484,13 +490,13 @@ Content-Type: application/json
 
 ```json
 {
-    "slug":    "my-first-post",
-    "title":   "My First Post",
-    "date":    "2026-04-30",
-    "tags":    ["go", "blog"],
+    "slug": "my-first-post",
+    "title": "My First Post",
+    "date": "2026-04-30",
+    "tags": ["go", "blog"],
     "summary": "A short summary shown in listings.",
     "content": "# My First Post\n\nContent here...",
-    "status":  "published"
+    "status": "published"
 }
 ```
 
@@ -556,13 +562,13 @@ All endpoints require `Authorization: Bearer pb_admin_xxxxxxxx`.
 
 ### Posts
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/admin/posts` | List all posts including drafts |
-| `GET` | `/api/admin/posts/:slug` | Get single post with full content |
-| `PUT` | `/api/admin/posts/:slug` | Update post (same body as sync) |
-| `DELETE` | `/api/admin/posts/:slug` | Delete post permanently |
-| `PATCH` | `/api/admin/posts/:slug/status` | Publish or unpublish |
+| Method   | Path                            | Description                       |
+| -------- | ------------------------------- | --------------------------------- |
+| `GET`    | `/api/admin/posts`              | List all posts including drafts   |
+| `GET`    | `/api/admin/posts/:slug`        | Get single post with full content |
+| `PUT`    | `/api/admin/posts/:slug`        | Update post (same body as sync)   |
+| `DELETE` | `/api/admin/posts/:slug`        | Delete post permanently           |
+| `PATCH`  | `/api/admin/posts/:slug/status` | Publish or unpublish              |
 
 **GET /api/admin/posts response**
 
@@ -570,17 +576,17 @@ All endpoints require `Authorization: Bearer pb_admin_xxxxxxxx`.
 {
     "posts": [
         {
-            "slug":         "my-first-post",
-            "title":        "My First Post",
-            "summary":      "A short summary.",
-            "tags":         ["go", "blog"],
-            "status":       "published",
+            "slug": "my-first-post",
+            "title": "My First Post",
+            "summary": "A short summary.",
+            "tags": ["go", "blog"],
+            "status": "published",
             "published_at": "2026-04-30T00:00:00Z",
-            "updated_at":   "2026-04-30T12:00:00Z"
+            "updated_at": "2026-04-30T12:00:00Z"
         }
     ],
     "total": 1,
-    "page":  1
+    "page": 1
 }
 ```
 
@@ -592,18 +598,18 @@ All endpoints require `Authorization: Bearer pb_admin_xxxxxxxx`.
 
 ### Keys
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/admin/keys` | List all keys (hash never returned) |
-| `POST` | `/api/admin/keys` | Create new key |
-| `DELETE` | `/api/admin/keys/:id` | Revoke a key |
+| Method   | Path                  | Description                         |
+| -------- | --------------------- | ----------------------------------- |
+| `GET`    | `/api/admin/keys`     | List all keys (hash never returned) |
+| `POST`   | `/api/admin/keys`     | Create new key                      |
+| `DELETE` | `/api/admin/keys/:id` | Revoke a key                        |
 
 **POST /api/admin/keys request**
 
 ```json
 {
-    "label":       "github action",
-    "type":        "sync",
+    "label": "github action",
+    "type": "sync",
     "permissions": ["posts:write"]
 }
 ```
@@ -612,10 +618,10 @@ All endpoints require `Authorization: Bearer pb_admin_xxxxxxxx`.
 
 ```json
 {
-    "id":    "abc123",
-    "key":   "pb_sync_x7k2mN9qR4vL8wP3jT6yA1nF5eH0",
+    "id": "abc123",
+    "key": "pb_sync_x7k2mN9qR4vL8wP3jT6yA1nF5eH0",
     "label": "github action",
-    "note":  "Save this key. It will not be shown again."
+    "note": "Save this key. It will not be shown again."
 }
 ```
 
@@ -625,11 +631,11 @@ All endpoints require `Authorization: Bearer pb_admin_xxxxxxxx`.
 {
     "keys": [
         {
-            "id":           "abc123",
-            "label":        "github action",
-            "prefix":       "pb_sync_",
-            "permissions":  ["posts:write"],
-            "created_at":   "2026-04-30T00:00:00Z",
+            "id": "abc123",
+            "label": "github action",
+            "prefix": "pb_sync_",
+            "permissions": ["posts:write"],
+            "created_at": "2026-04-30T00:00:00Z",
             "last_used_at": "2026-05-01T08:00:00Z"
         }
     ]
@@ -638,37 +644,37 @@ All endpoints require `Authorization: Bearer pb_admin_xxxxxxxx`.
 
 ### Settings
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/admin/settings` | Get all settings |
-| `PUT` | `/api/admin/settings` | Update settings |
+| Method | Path                  | Description      |
+| ------ | --------------------- | ---------------- |
+| `GET`  | `/api/admin/settings` | Get all settings |
+| `PUT`  | `/api/admin/settings` | Update settings  |
 
 **Settings shape**
 
 ```json
 {
-    "site_title":       "My Blog",
+    "site_title": "My Blog",
     "site_description": "Writing about Go and things.",
-    "site_url":         "https://pressbin.in",
-    "posts_per_page":   10
+    "site_url": "https://pressbin.dev",
+    "posts_per_page": 10
 }
 ```
 
 ### Stats
 
-| Method | Path | Description |
-|---|---|---|
-| `GET` | `/api/admin/stats` | Basic site stats |
+| Method | Path               | Description      |
+| ------ | ------------------ | ---------------- |
+| `GET`  | `/api/admin/stats` | Basic site stats |
 
 **Stats response**
 
 ```json
 {
-    "total_posts":     42,
+    "total_posts": 42,
     "published_posts": 38,
-    "draft_posts":     4,
-    "total_tags":      15,
-    "last_sync_at":    "2026-05-01T08:00:00Z"
+    "draft_posts": 4,
+    "total_tags": 15,
+    "last_sync_at": "2026-05-01T08:00:00Z"
 }
 ```
 
@@ -676,7 +682,8 @@ All endpoints require `Authorization: Bearer pb_admin_xxxxxxxx`.
 
 ## 10. Module: Render
 
-All pages are pure Go functions using gomponents. No template files, no runtime errors.
+All pages are pure Go functions using gomponents. No template files, no runtime
+errors.
 
 ### `internal/render/layout.go`
 
@@ -755,7 +762,8 @@ func searchBox() g.Node {
 
 ### First Boot Bootstrap
 
-On first run with an empty DB, generate the admin key automatically and print it once:
+On first run with an empty DB, generate the admin key automatically and print it
+once:
 
 ```go
 func (s *Store) Bootstrap() (string, error) {
@@ -861,10 +869,10 @@ func (k APIKey) HasPermission(required string) bool {
 }
 ```
 
-| Key Type | Prefix | Permissions | Used by |
-|---|---|---|---|
-| Admin | `pb_admin_` | `["*"]` | You, manually |
-| Sync | `pb_sync_` | `["posts:write"]` | GitHub Action |
+| Key Type | Prefix      | Permissions       | Used by       |
+| -------- | ----------- | ----------------- | ------------- |
+| Admin    | `pb_admin_` | `["*"]`           | You, manually |
+| Sync     | `pb_sync_`  | `["posts:write"]` | GitHub Action |
 
 ### Key Rotation (zero downtime)
 
@@ -884,20 +892,20 @@ No restart needed.
 
 ```yaml
 server:
-  port: 8080
-  host: 0.0.0.0
+    port: 8080
+    host: 0.0.0.0
 
 database:
-  path: ./pressbin.db
+    path: ./pressbin.db
 
 site:
-  title: "My Blog"
-  description: "Writing about Go and things."
-  url: "https://pressbin.in"
-  posts_per_page: 10
+    title: "My Blog"
+    description: "Writing about Go and things."
+    url: "https://pressbin.dev"
+    posts_per_page: 10
 
 log:
-  level: info   # debug | info | warn | error
+    level: info # debug | info | warn | error
 ```
 
 ### `internal/config/config.go`
@@ -947,28 +955,28 @@ func Load(path string) (*Config, error) {
 name: Sync posts to Pressbin
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'posts/**.md'
+    push:
+        branches: [main]
+        paths:
+            - "posts/**.md"
 
 jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
+    sync:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 2
 
-      - name: Sync changed posts
-        env:
-          PRESSBIN_URL: ${{ secrets.PRESSBIN_URL }}
-          PRESSBIN_KEY: ${{ secrets.PRESSBIN_KEY }}
-        run: |
-          git diff --name-only HEAD~1 HEAD -- 'posts/*.md' | while read file; do
-            echo "Syncing $file..."
-            python3 .github/scripts/push.py "$file"
-          done
+            - name: Sync changed posts
+              env:
+                  PRESSBIN_URL: ${{ secrets.PRESSBIN_URL }}
+                  PRESSBIN_KEY: ${{ secrets.PRESSBIN_KEY }}
+              run: |
+                  git diff --name-only HEAD~1 HEAD -- 'posts/*.md' | while read file; do
+                    echo "Syncing $file..."
+                    python3 .github/scripts/push.py "$file"
+                  done
 ```
 
 ### `.github/scripts/push.py`
@@ -1019,9 +1027,9 @@ print(f"OK: {slug}")
 
 ### GitHub Secrets to configure
 
-| Secret | Value |
-|---|---|
-| `PRESSBIN_URL` | `https://pressbin.in` |
+| Secret         | Value                          |
+| -------------- | ------------------------------ |
+| `PRESSBIN_URL` | `https://pressbin.dev`         |
 | `PRESSBIN_KEY` | `pb_sync_xxxxxxxxxxxxxxxxxxxx` |
 
 ---
@@ -1088,7 +1096,7 @@ systemctl status pressbin
 ```nginx
 server {
     listen 80;
-    server_name pressbin.in www.pressbin.in;
+    server_name pressbin.dev www.pressbin.dev;
 
     location / {
         proxy_pass         http://127.0.0.1:8080;
@@ -1108,7 +1116,8 @@ Work through this in sequence. Each step is independently testable.
 
 - [ ] `go mod init`, install all dependencies
 - [ ] `internal/config` — load and parse config.yml
-- [ ] `internal/store/store.go` — SQLite connection + schema migration on startup
+- [ ] `internal/store/store.go` — SQLite connection + schema migration on
+      startup
 - [ ] `internal/store/posts.go` — UpsertPost + GetPost
 - [ ] `internal/parser/parser.go` — parse a .md file → HTML
 - [ ] Smoke test: small main.go that reads a .md file and saves it to SQLite
@@ -1116,7 +1125,7 @@ Work through this in sequence. Each step is independently testable.
 - [ ] `internal/render/post.go` — single post page
 - [ ] `internal/server/server.go` — chi router, serve one post at `/p/:slug`
 
-**Checkpoint:** `go run . ` → hit `localhost:8080/p/test` → see a rendered post.
+**Checkpoint:** `go run .` → hit `localhost:8080/p/test` → see a rendered post.
 
 ### Week 2 — Sync pipeline live
 
@@ -1150,9 +1159,9 @@ Work through this in sequence. Each step is independently testable.
 - [ ] systemd service file
 - [ ] Nginx config
 - [ ] README with 5-minute setup guide
-- [ ] Deploy to pressbin.in
+- [ ] Deploy to pressbin.dev
 - [ ] Push your first real post via GitHub
 
 ---
 
-*Built with Go. Deployed as one file. No nonsense.*
+_Built with Go. Deployed as one file. No nonsense._

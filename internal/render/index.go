@@ -4,10 +4,10 @@ import (
 	"strconv"
 
 	g "maragu.dev/gomponents"
-	h "maragu.dev/gomponents/html"
 	hx "maragu.dev/gomponents-htmx"
+	h "maragu.dev/gomponents/html"
 
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 func IndexPage(posts []store.Post, pd PageData, page, totalPages int) g.Node {

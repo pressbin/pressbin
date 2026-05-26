@@ -10,16 +10,16 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"pressbin.in/pressbin/internal/config"
-	"pressbin.in/pressbin/internal/render"
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/config"
+	"pressbin.dev/pressbin/internal/render"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 type Server struct {
-	store   *store.Store
-	config  *config.Config
-	router  chi.Router
-	assets  fs.FS
+	store  *store.Store
+	config *config.Config
+	router chi.Router
+	assets fs.FS
 }
 
 func New(st *store.Store, cfg *config.Config, assets fs.FS) *Server {
@@ -45,6 +45,7 @@ func (s *Server) routes() {
 
 	r.Get("/", s.handleIndex)
 	r.Get("/p/{slug}", s.handlePost)
+	r.Get("/tags", s.handleTags)
 	r.Get("/tag/{tag}", s.handleTag)
 	r.Get("/search", s.handleSearch)
 	r.Get("/feed.xml", s.handleRSS)
@@ -52,6 +53,7 @@ func (s *Server) routes() {
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireAuth("posts:write"))
 		r.Post("/api/sync", s.handleSync)
+		r.Delete("/api/sync/{slug}", s.handleSyncDelete)
 	})
 
 	r.Group(func(r chi.Router) {

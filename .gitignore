@@ -1,6 +1,7 @@
 /tmp/
 tmp/
 bin/
+dist/
 *.db
 *.db-shm
 *.db-wal

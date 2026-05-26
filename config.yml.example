@@ -1,0 +1,42 @@
+# Pressbin Configuration
+# Copy this file to config.yml and edit as needed.
+# Full docs: https://pressbin.dev/docs
+
+# ── Server ─────────────────────────────────────────────────────────
+server:
+  port: 8080          # Port to listen on
+  host: 0.0.0.0       # Bind address. Use 127.0.0.1 if behind nginx.
+
+# ── Database ───────────────────────────────────────────────────────
+database:
+  path: ./pressbin.db  # SQLite file path. Back this file up regularly.
+
+# ── Site ───────────────────────────────────────────────────────────
+site:
+  title: "My Blog"
+  description: "Writing about things."
+  url: "https://yourdomain.com"   # No trailing slash. Used for RSS feed.
+  posts_per_page: 10
+
+# ── Comments (optional) ────────────────────────────────────────────
+# comments:
+#   provider: none        # none | giscus | utterances
+#   # If giscus:
+#   # repo: "yourname/yourrepo"
+#   # repo_id: "R_..."
+#   # category_id: "DIC_..."
+
+# ── Analytics (optional) ───────────────────────────────────────────
+# analytics:
+#   provider: none        # none | plausible | umami
+#   # domain: "yourdomain.com"
+#   # script_url: "https://plausible.io/js/script.js"
+
+# ── Theme (optional) ─────────────────────────────────────────────────
+# theme:
+#   custom_css: ""        # e.g. ./assets/custom.css
+#   templates_dir: ""     # e.g. ./templates/
+
+# ── Log ────────────────────────────────────────────────────────────
+log:
+  level: info           # debug | info | warn | error

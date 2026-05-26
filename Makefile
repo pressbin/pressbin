@@ -1,4 +1,4 @@
-.PHONY: help dev run migrate build clean tidy vet install-air
+.PHONY: help dev run migrate build release release-bundle clean tidy vet install-air
 
 CONFIG ?= config.yml
 
@@ -19,8 +19,16 @@ build: ## Build production binary to ./bin/pressbin
 	@mkdir -p bin
 	go build -ldflags="-s -w" -o bin/pressbin .
 
-clean: ## Remove Air tmp dir, bin/, and local DB artifact
-	rm -rf tmp bin
+release: ## Build all platform binaries under dist/
+	chmod +x scripts/build-release.sh
+	./scripts/build-release.sh v0.0.0-local
+
+release-bundle: ## Build linux/amd64 tarball with config example + sync workflow
+	chmod +x .github/scripts/package-release.sh
+	.github/scripts/package-release.sh v0.0.0-local linux amd64
+
+clean: ## Remove Air tmp dir, bin/, dist/, and local DB artifact
+	rm -rf tmp bin dist
 	rm -f pressbin.db pressbin.db-shm pressbin.db-wal
 
 tidy: ## go mod tidy

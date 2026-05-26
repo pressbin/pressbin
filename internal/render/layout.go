@@ -65,6 +65,11 @@ func navbar(pd PageData) g.Node {
 					g.Text("Home"),
 				),
 				h.A(
+					h.Class("text-gray-600 hover:text-blue-600"),
+					h.Href("/tags"),
+					g.Text("Tags"),
+				),
+				h.A(
 					h.Class("inline-flex items-center gap-1 text-gray-600 hover:text-blue-600"),
 					h.Href("/feed.xml"),
 					lucide.Rss(h.Class("w-4 h-4")),

@@ -8,15 +8,23 @@ import (
 	"net/http"
 	"os"
 
-	"pressbin.in/pressbin/internal/config"
-	"pressbin.in/pressbin/internal/server"
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/config"
+	"pressbin.dev/pressbin/internal/server"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 //go:embed all:assets
 var assetsFS embed.FS
 
+// Version is set at build time via -ldflags "-X main.Version=...".
+var Version = "dev"
+
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "version" {
+		fmt.Printf("pressbin %s\n", Version)
+		os.Exit(0)
+	}
+
 	configPath := flag.String("config", "config.yml", "path to config.yml")
 	flag.Parse()
 
@@ -41,14 +49,14 @@ func main() {
 	} else if raw != "" {
 		fmt.Printf(`
 ┌─────────────────────────────────────────────┐
-│  Pressbin — First Run                       │
+│  Pressbin %s — First Run                    │
 │                                             │
 │  Admin API Key:                             │
 │  %s                                         │
 │                                             │
 │  Save this. It will not be shown again.     │
 └─────────────────────────────────────────────┘
-`, raw)
+`, Version, raw)
 	}
 
 	srv := server.New(st, cfg, assetsFS)

@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+
+      - name: Build all targets
+        run: |
+          chmod +x scripts/build-release.sh
+          scripts/build-release.sh "${{ github.ref_name }}"
+
+      - name: Generate checksums
+        run: |
+          cd dist
+          sha256sum * > checksums.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*
+          body: |
+            ## Pressbin ${{ github.ref_name }}
+
+            ### Download
+            Pick the binary for your platform:
+
+            | Platform | File |
+            |---|---|
+            | Linux x64 (most VPS) | `pressbin-linux-amd64` |
+            | Linux ARM64 | `pressbin-linux-arm64` |
+            | Mac Intel | `pressbin-darwin-amd64` |
+            | Mac Apple Silicon | `pressbin-darwin-arm64` |
+            | Windows | `pressbin-windows-amd64.exe` |
+
+            Copy [config.yml.example](https://github.com/${{ github.repository }}/blob/main/config.yml.example) to `config.yml`, then run `./pressbin --config config.yml`.
+
+            For git-push publishing, copy `.github/workflows/sync.yml` from [templates/consumer](https://github.com/${{ github.repository }}/tree/main/templates/consumer/.github) into your content repo (includes `push.py`).
+
+            ### Verify checksum
+            ```bash
+            cd dist   # after downloading checksums.txt alongside binaries
+            sha256sum -c checksums.txt
+            ```
+
+            ### What's changed
+            See the auto-generated release notes below.

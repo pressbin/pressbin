@@ -5,8 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"pressbin.in/pressbin/internal/parser"
-	"pressbin.in/pressbin/internal/store"
+	"github.com/go-chi/chi/v5"
+
+	"pressbin.dev/pressbin/internal/parser"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 type syncPayload struct {
@@ -95,4 +97,26 @@ func (s *Server) handleSync(w http.ResponseWriter, r *http.Request) {
 		action = "created"
 	}
 	writeJSON(w, 200, map[string]string{"status": "ok", "slug": req.Slug, "action": action})
+}
+
+func (s *Server) handleSyncDelete(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	if slug == "" {
+		writeError(w, 400, "slug is required")
+		return
+	}
+	exists, err := s.store.PostExists(slug)
+	if err != nil {
+		writeError(w, 500, "failed to delete post")
+		return
+	}
+	if !exists {
+		writeError(w, 404, "not found")
+		return
+	}
+	if err := s.store.DeletePost(slug); err != nil {
+		writeError(w, 500, "failed to delete post")
+		return
+	}
+	writeJSON(w, 200, map[string]string{"status": "ok", "slug": slug, "action": "deleted"})
 }

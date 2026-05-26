@@ -4,7 +4,7 @@ import (
 	g "maragu.dev/gomponents"
 	h "maragu.dev/gomponents/html"
 
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 func PostPage(post store.Post, pd PageData) g.Node {

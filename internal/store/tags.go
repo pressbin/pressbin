@@ -23,7 +23,13 @@ func (s *Store) tagsForSlug(slug string) ([]string, error) {
 }
 
 func (s *Store) AllTags() ([]string, error) {
-	rows, err := s.db.Query(`SELECT DISTINCT tag FROM tags ORDER BY tag`)
+	rows, err := s.db.Query(`
+		SELECT DISTINCT t.tag
+		FROM tags t
+		INNER JOIN posts p ON p.slug = t.slug
+		WHERE p.status = 'published'
+		ORDER BY t.tag
+	`)
 	if err != nil {
 		return nil, err
 	}

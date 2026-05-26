@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"pressbin.in/pressbin/internal/config"
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/config"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 func main() {

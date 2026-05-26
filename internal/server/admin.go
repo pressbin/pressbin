@@ -12,8 +12,8 @@ import (
 	"github.com/jaevor/go-nanoid"
 	"golang.org/x/crypto/bcrypt"
 
-	"pressbin.in/pressbin/internal/parser"
-	"pressbin.in/pressbin/internal/store"
+	"pressbin.dev/pressbin/internal/parser"
+	"pressbin.dev/pressbin/internal/store"
 )
 
 func (s *Server) handleAdminListPosts(w http.ResponseWriter, r *http.Request) {
@@ -25,13 +25,13 @@ func (s *Server) handleAdminListPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	type row struct {
-		Slug         string    `json:"slug"`
-		Title        string    `json:"title"`
-		Summary      string    `json:"summary"`
-		Tags         []string  `json:"tags"`
-		Status       string    `json:"status"`
-		PublishedAt  time.Time `json:"published_at"`
-		UpdatedAt    time.Time `json:"updated_at"`
+		Slug        string    `json:"slug"`
+		Title       string    `json:"title"`
+		Summary     string    `json:"summary"`
+		Tags        []string  `json:"tags"`
+		Status      string    `json:"status"`
+		PublishedAt time.Time `json:"published_at"`
+		UpdatedAt   time.Time `json:"updated_at"`
 	}
 	out := make([]row, 0, len(posts))
 	for _, p := range posts {
