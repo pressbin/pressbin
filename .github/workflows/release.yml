@@ -1,16 +1,19 @@
-name: Release
+name: CI and Release
 
 on:
   push:
-    tags:
-      - "v*"
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+
+# Stable release: v1.0.0, v1.1.1 (not v1.0.0-beta, v1.0.0-alpha.1, v1.0.0-rc.1)
+permissions:
+  contents: write
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
     steps:
       - uses: actions/checkout@v4
 
@@ -19,21 +22,35 @@ jobs:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
-      - name: Build all targets
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Smoke build
+        if: github.ref_type != 'tag'
+        run: go build -ldflags="-s -w" -o pressbin .
+
+      - name: Build release binaries
+        if: github.ref_type == 'tag' && matches(github.ref_name, '^v[0-9]+\.[0-9]+\.[0-9]+$')
         run: |
           chmod +x scripts/build-release.sh
           scripts/build-release.sh "${{ github.ref_name }}"
 
       - name: Generate checksums
+        if: github.ref_type == 'tag' && matches(github.ref_name, '^v[0-9]+\.[0-9]+\.[0-9]+$')
         run: |
           cd dist
           sha256sum * > checksums.txt
 
       - name: Create GitHub Release
+        if: github.ref_type == 'tag' && matches(github.ref_name, '^v[0-9]+\.[0-9]+\.[0-9]+$')
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/*
+          generate_release_notes: true
           body: |
             ## Pressbin ${{ github.ref_name }}
 
@@ -50,13 +67,9 @@ jobs:
 
             Copy [config.yml.example](https://github.com/${{ github.repository }}/blob/main/config.yml.example) to `config.yml`, then run `./pressbin --config config.yml`.
 
-            For git-push publishing, copy `.github/workflows/sync.yml` from [templates/consumer](https://github.com/${{ github.repository }}/tree/main/templates/consumer/.github) into your content repo (includes `push.py`).
+            For git-push publishing, use the [blog content template](https://github.com/pressbin/pressbin-blog-template) (sync workflow + `push.py`).
 
             ### Verify checksum
             ```bash
-            cd dist   # after downloading checksums.txt alongside binaries
             sha256sum -c checksums.txt
             ```
-
-            ### What's changed
-            See the auto-generated release notes below.

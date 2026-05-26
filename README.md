@@ -47,9 +47,10 @@ make migrate
 
 ## Releases
 
-Tagged pushes (`v*`) run `.github/workflows/release.yml`, which builds
-self-contained binaries for linux/darwin/windows (amd64 + arm64 where
-applicable), plus `checksums.txt`.
+Pushes and PRs run `.github/workflows/release.yml` (`go vet`, `go test`, smoke
+build). **Stable** tag pushes (`v1.0.0`, `v1.1.1`, etc.) automatically build
+all platforms and create a GitHub Release. Pre-release tags (`v1.0.0-beta`,
+`v1.0.0-alpha.1`, `v1.0.0-rc.1`) run checks only — no release upload.
 
 Download from [GitHub Releases](https://github.com/pressbin/pressbin/releases).
 Use `config.yml.example` at the repo root as your starting config.
@@ -68,13 +69,7 @@ For a **separate content repo**, use [`../pressbin_blog_template/`](../pressbin_
 (or copy `templates/consumer/` — kept in sync with the template). Tags live in
 each post’s YAML front matter; see the template README for layout and conventions.
 
-That template mirrors the sync setup in this repo:
-
-- `.github/workflows/sync.yml` (this repo — for dogfooding sync from `posts/` if
-  added)
-- `.github/scripts/push.py`
-
-Secrets needed in the content repo on GitHub:
+Secrets needed in the **content repo** on GitHub:
 
 - `PRESSBIN_URL` (e.g. `https://pressbin.dev`)
 - `PRESSBIN_KEY` (a `pb_sync_...` key created via the admin API)
