@@ -9,36 +9,48 @@ on:
       version:
         description: 'Embedded build version (e.g. v1.0.0-rc1 or sha-abc1234)'
         required: false
-        default: ''
+        type: string
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: >-
-      github.event_name == 'workflow_dispatch'
-      || (github.ref_type == 'tag'
-      && !contains(github.ref_name, 'alpha')
-      && !contains(github.ref_name, 'beta'))
     permissions:
       contents: write
 
     steps:
+      - name: Gate (skip alpha/beta tags)
+        id: gate
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if echo "${{ github.ref_name }}" | grep -qiE 'alpha|beta'; then
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipped: pre-release tag ${{ github.ref_name }} (alpha/beta not built)"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Checkout code
+        if: steps.gate.outputs.run == 'true'
         uses: actions/checkout@v4
 
       - name: Set up Go
+        if: steps.gate.outputs.run == 'true'
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
 
       - name: Resolve build version
+        if: steps.gate.outputs.run == 'true'
         id: version
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then
             VER='${{ github.ref_name }}'
-          elif [ -n "${{ github.event.inputs.version }}" ]; then
-            VER='${{ github.event.inputs.version }}'
+          elif [ -n "${{ inputs.version }}" ]; then
+            VER='${{ inputs.version }}'
           else
             VER="sha-$(git rev-parse --short HEAD)"
           fi
@@ -46,23 +58,27 @@ jobs:
           echo "Building with embedded version: $VER"
 
       - name: Vet
+        if: steps.gate.outputs.run == 'true'
         run: go vet ./...
 
       - name: Test
+        if: steps.gate.outputs.run == 'true'
         run: go test ./...
 
       - name: Build binaries
+        if: steps.gate.outputs.run == 'true'
         run: |
           chmod +x scripts/build-release.sh
           scripts/build-release.sh "${{ steps.version.outputs.version }}"
 
       - name: Generate checksums
+        if: steps.gate.outputs.run == 'true'
         run: |
           cd dist
           sha256sum pressbin-* > checksums.txt
 
       - name: Create GitHub Release
-        if: github.ref_type == 'tag'
+        if: steps.gate.outputs.run == 'true' && github.ref_type == 'tag'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -93,5 +109,3 @@ jobs:
             ```bash
             sha256sum -c checksums.txt
             ```
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

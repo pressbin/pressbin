@@ -52,8 +52,10 @@ Pushes and PRs run [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 [`.github/workflows/release.yml`](.github/workflows/release.yml) (**Build and Release**) runs on:
 
 - Tag push `v*` **without** `alpha` or `beta` in the name (e.g. `v1.0.0`, `v1.1.1`) → builds all platforms and publishes a GitHub Release
-- Tags like `v1.0.0-beta` or `v1.0.0-alpha.1` → workflow does not run
-- **workflow_dispatch** → builds with a custom embedded version (optional input); no release unless you tagged
+- Tags like `v1.0.0-beta` → workflow queues but skips the build (no release)
+- **workflow_dispatch** on branch `main` → manual build; optional version input; no GitHub Release unless you pushed a tag
+
+**If the UI says “Failed to queue workflow run”:** use branch `main`, enable Actions under Settings → Actions → General, push a stable tag (`git push origin v1.0.0`), or retry after a minute (GitHub glitch). Do not use a tag name containing `alpha` or `beta` if you expect a release.
 
 Manual build:
 
