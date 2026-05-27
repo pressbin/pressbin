@@ -1,0 +1,15 @@
+meta {
+  name: Revoke Key
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/keys/{{keyId}}
+  body: none
+  auth: inherit
+}
+
+docs {
+  Set `keyId` from List Keys or after Create Key (post-response script saves it to the environment).
+}

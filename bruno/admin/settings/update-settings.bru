@@ -1,0 +1,24 @@
+meta {
+  name: Update Settings
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/admin/settings
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "site_title": "My Blog",
+    "site_description": "Writing about things.",
+    "site_url": "http://localhost:8080",
+    "posts_per_page": 10
+  }
+}

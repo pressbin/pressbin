@@ -1,6 +1,6 @@
 # Pressbin — Quick Start
 
-1. Copy config.yml.example to config.yml and set site.title and site.url.
+1. Copy config.yml.example to config.yml **or** set PRESSBIN_* env vars (see README). Env overrides YAML.
 
 2. Run:
 

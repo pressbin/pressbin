@@ -25,18 +25,49 @@ make dev
 Air watches Go code, `assets/style.css`, and `config.yml` (embedded assets are
 rebuilt automatically).
 
-## Config / DB path note
+## Configuration
 
-`pressbin_api/config.yml` defaults to `database.path: ./pressbin.db`. This path
-is resolved **relative to the config file**, not the current working directory,
-so running from the monorepo root still uses the same database.
+Use **either** an optional `config.yml` **or** `PRESSBIN_*` environment variables
+(env wins when both are set). No `.env` file is read — set vars in your shell,
+systemd unit, or container.
 
-## Migrations + sample data
+| Variable | Purpose |
+|----------|---------|
+| `PRESSBIN_SERVER_PORT` | Listen port (default `8080`) |
+| `PRESSBIN_SERVER_HOST` | Bind address (default `0.0.0.0`) |
+| `PRESSBIN_DATABASE_PATH` | SQLite file path |
+| `PRESSBIN_SITE_TITLE` | Site title (also synced to DB on start) |
+| `PRESSBIN_SITE_DESCRIPTION` | Site description |
+| `PRESSBIN_SITE_URL` | Public URL (RSS, etc.) |
+| `PRESSBIN_SITE_POSTS_PER_PAGE` | Posts per index page |
+| `PRESSBIN_ASSETS_UPLOAD_DRIVER` | Asset upload driver (default `local`) |
+| `PRESSBIN_ASSETS_STORAGE_PATH` | Writable dir for synced assets (e.g. `~/public_html/assets`) |
+| `PRESSBIN_LOG_LEVEL` | `debug`, `info`, `warn`, `error` |
+
+Local dev: copy `config.yml.example` to `config.yml` (included in this repo for the monorepo).
+
+Production example (no config file):
+
+```bash
+export PRESSBIN_DATABASE_PATH=/var/lib/pressbin/pressbin.db
+export PRESSBIN_ASSETS_STORAGE_PATH=/var/lib/pressbin/assets
+export PRESSBIN_SITE_URL=https://blog.example.com
+export PRESSBIN_SITE_TITLE="My Blog"
+./pressbin
+```
+
+Relative paths in YAML are resolved from the **config file’s directory**; without a
+file, they resolve from the **process working directory**. Prefer absolute paths in env.
+
+On every startup, resolved `site.*` values are written into the `settings` table.
+
+## Migrations
 
 Migrations are embedded in the binary and are applied automatically on startup.
-
-- SQL files live in `pressbin_api/internal/store/migrations/`
-- `002_sample_data.sql` inserts a few sample posts (safe to delete)
+SQL files live in `pressbin_api/internal/store/migrations/`. Posts are not seeded in
+the database — sync them from your GitHub content repo so the DB stays 1:1 with Git.
+Images sync via `POST /api/sync/asset` (same GitHub Action as posts). Set a writable
+`PRESSBIN_ASSETS_STORAGE_PATH` (recommended) or `assets.upload.storage_path` in config.
 
 Run migrations without starting the server:
 

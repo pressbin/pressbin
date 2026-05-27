@@ -25,7 +25,7 @@ func main() {
 		os.Exit(0)
 	}
 
-	configPath := flag.String("config", "config.yml", "path to config.yml")
+	configPath := flag.String("config", "config.yml", "optional config.yml (overridden by PRESSBIN_* env vars)")
 	flag.Parse()
 
 	cfg, err := config.Load(*configPath)
@@ -42,6 +42,11 @@ func main() {
 		os.Exit(1)
 	}
 	defer st.Close()
+
+	if err := st.ApplySiteConfig(cfg.Site.Title, cfg.Site.Description, cfg.Site.URL, cfg.Site.PostsPerPage); err != nil {
+		slog.Error("apply site config", "err", err)
+		os.Exit(1)
+	}
 
 	if raw, err := st.Bootstrap(); err != nil {
 		slog.Error("bootstrap", "err", err)

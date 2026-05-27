@@ -1,0 +1,26 @@
+meta {
+  name: Update Post
+  type: http
+  seq: 3
+}
+
+put {
+  url: {{baseUrl}}/api/admin/posts/{{postSlug}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "title": "Welcome to Pressbin",
+    "content": "# Welcome to Pressbin\n\nUpdated via Bruno admin API.\n",
+    "summary": "A quick tour of what Pressbin is for.",
+    "tags": ["pressbin", "sample"],
+    "status": "published",
+    "date": "2026-04-01T12:00:00Z"
+  }
+}

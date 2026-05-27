@@ -72,10 +72,29 @@ func (s *Store) LastPostUpdate() (*time.Time, error) {
 	if err != nil {
 		t, err = time.Parse("2006-01-02 15:04:05-07:00", raw.String)
 	}
+	// Some SQLite drivers store time.Time via fmt.Sprint(t), yielding
+	// "2006-01-02 15:04:05 +0000 UTC".
+	if err != nil {
+		t, err = time.Parse("2006-01-02 15:04:05 -0700 MST", raw.String)
+	}
 	if err != nil {
 		return nil, err
 	}
 	return &t, nil
+}
+
+// ApplySiteConfig writes site.* from config.yml into settings on every startup
+// so a server restart picks up config changes.
+func (s *Store) ApplySiteConfig(title, description, url string, postsPerPage int) error {
+	if postsPerPage < 1 {
+		postsPerPage = 10
+	}
+	return s.UpdateSettings(map[string]string{
+		"site_title":       title,
+		"site_description": description,
+		"site_url":         url,
+		"posts_per_page":   strconv.Itoa(postsPerPage),
+	})
 }
 
 func (s *Store) PostsPerPageFromSettings(defaultN int) int {

@@ -1,0 +1,32 @@
+meta {
+  name: Create Sync Key
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/admin/keys
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "label": "GitHub Actions sync",
+    "type": "sync"
+  }
+}
+
+docs {
+  Response includes the raw `pb_sync_...` key once. Save it for PRESSBIN_KEY in your content repo.
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("keyId", res.body.id);
+  }
+}

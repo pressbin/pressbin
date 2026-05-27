@@ -37,6 +37,9 @@ tidy: ## go mod tidy
 vet: ## go vet
 	go vet ./...
 
+test: ## Run unit tests
+	go test ./...
+
 install-air: ## Install github.com/air-verse/air (add GOPATH/bin to PATH)
 	go install github.com/air-verse/air@latest
 	@echo "Ensure $$(go env GOPATH)/bin is on your PATH."

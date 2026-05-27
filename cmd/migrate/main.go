@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	configPath := flag.String("config", "config.yml", "path to config.yml")
+	configPath := flag.String("config", "config.yml", "optional config.yml (overridden by PRESSBIN_* env vars)")
 	flag.Parse()
 
 	cfg, err := config.Load(*configPath)

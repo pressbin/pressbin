@@ -1,0 +1,11 @@
+meta {
+  name: Delete Post
+  type: http
+  seq: 4
+}
+
+delete {
+  url: {{baseUrl}}/api/admin/posts/{{postSlug}}
+  body: none
+  auth: inherit
+}

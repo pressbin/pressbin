@@ -225,9 +225,9 @@ func (s *Store) SearchPosts(query string) ([]Post, error) {
 	}
 	rows, err := s.db.Query(`
 		SELECT p.slug, p.title, p.content_md, p.content_html, p.summary, p.published_at, p.updated_at, p.status
-		FROM fts_index f
-		INNER JOIN posts p ON p.rowid = f.rowid
-		WHERE f MATCH ? AND p.status = 'published'
+		FROM fts_index
+		INNER JOIN posts p ON p.rowid = fts_index.rowid
+		WHERE fts_index MATCH ? AND p.status = 'published'
 		ORDER BY rank
 		LIMIT 50
 	`, q)

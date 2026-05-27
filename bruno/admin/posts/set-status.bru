@@ -1,0 +1,29 @@
+meta {
+  name: Set Post Status
+  type: http
+  seq: 5
+}
+
+post {
+  url: {{baseUrl}}/api/admin/posts/{{postSlug}}/status
+  body: json
+  auth: inherit
+}
+
+script:pre-request {
+  req.setMethod("PATCH");
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "status": "draft"
+  }
+}
+
+docs {
+  Status must be `published` or `draft`.
+}

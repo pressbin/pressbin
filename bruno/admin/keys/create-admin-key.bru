@@ -1,0 +1,32 @@
+meta {
+  name: Create Admin Key
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/admin/keys
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "label": "Secondary admin",
+    "type": "admin"
+  }
+}
+
+docs {
+  Response includes the raw `pb_admin_...` key once.
+}
+
+script:post-response {
+  if (res.body && res.body.id) {
+    bru.setEnvVar("keyId", res.body.id);
+  }
+}

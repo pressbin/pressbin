@@ -1,6 +1,19 @@
-# Pressbin Configuration
-# Copy this file to config.yml and edit as needed.
-# Full docs: https://pressbin.dev/docs
+# Pressbin Configuration (optional)
+#
+# Use config.yml and/or PRESSBIN_* environment variables. Env vars win when both are set.
+# Copy to config.yml for local dev, or run env-only in production (no file required).
+#
+# Environment variables:
+#   PRESSBIN_SERVER_PORT          server.port
+#   PRESSBIN_SERVER_HOST          server.host
+#   PRESSBIN_DATABASE_PATH        database.path
+#   PRESSBIN_SITE_TITLE           site.title
+#   PRESSBIN_SITE_DESCRIPTION     site.description
+#   PRESSBIN_SITE_URL             site.url
+#   PRESSBIN_SITE_POSTS_PER_PAGE  site.posts_per_page
+#   PRESSBIN_ASSETS_UPLOAD_DRIVER assets.upload.driver
+#   PRESSBIN_ASSETS_STORAGE_PATH  assets.upload.storage_path
+#   PRESSBIN_LOG_LEVEL            log.level
 
 # ── Server ─────────────────────────────────────────────────────────
 server:
@@ -12,11 +25,29 @@ database:
   path: ./pressbin.db  # SQLite file path. Back this file up regularly.
 
 # ── Site ───────────────────────────────────────────────────────────
+# These values are copied into the database on every server start (restart
+# after editing config.yml). Posts are not stored here — sync from GitHub.
 site:
   title: "My Blog"
   description: "Writing about things."
   url: "https://yourdomain.com"   # No trailing slash. Used for RSS feed.
   posts_per_page: 10
+
+# ── Assets upload (v1) ───────────────────────────────────────────────
+# Where incoming asset files are written on disk via POST /api/sync/asset.
+# This is independent of where the pressbin binary lives.
+#
+# Recommended authoring convention in Markdown:
+# - Use full URLs (https://...) or root-absolute paths (/assets/images/x.png).
+# - Avoid relative paths like assets/images/x.png (browser resolves under /p/...).
+assets:
+  upload:
+    driver: local
+    storage_path: ""    # e.g. /home/user/public_html/assets
+
+  # Allowed prefixes for uploaded asset paths (after stripping leading "assets/").
+  # Example: "assets/images/hero.png" -> "images/hero.png" on disk.
+  allowed_prefixes: ["images/", "fonts/", "downloads/", "css/"]
 
 # ── Comments (optional) ────────────────────────────────────────────
 # comments:

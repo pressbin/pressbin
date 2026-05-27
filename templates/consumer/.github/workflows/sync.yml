@@ -1,4 +1,4 @@
-name: Sync posts to Pressbin
+name: Sync content to Pressbin
 
 on:
   push:
@@ -6,6 +6,7 @@ on:
     paths:
       - "posts/**/*.md"
       - "posts/*.md"
+      - "assets/images/**"
 
 jobs:
   sync:
@@ -18,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: pip install requests pyyaml
 
-      - name: Sync posts
+      - name: Sync posts and assets
         env:
           PRESSBIN_URL: ${{ secrets.PRESSBIN_URL }}
           PRESSBIN_KEY: ${{ secrets.PRESSBIN_KEY }}
@@ -26,31 +27,55 @@ jobs:
           set -e
           shopt -s globstar nullglob
 
-          sync_file() {
-            echo "Syncing $1..."
+          sync_post() {
+            echo "Syncing post $1..."
             python3 .github/scripts/push.py "$1"
           }
 
-          delete_file() {
-            echo "Deleting $1..."
+          delete_post() {
+            echo "Deleting post $1..."
             python3 .github/scripts/delete.py "$1"
           }
 
+          sync_asset() {
+            echo "Syncing asset $1..."
+            python3 .github/scripts/push_asset.py "$1"
+          }
+
+          delete_asset() {
+            echo "Deleting asset $1..."
+            python3 .github/scripts/delete_asset.py "$1"
+          }
+
           if ! git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-            echo "First push: syncing all posts under posts/"
+            echo "First push: syncing all posts and images"
             while IFS= read -r -d '' file; do
-              sync_file "$file"
+              sync_post "$file"
             done < <(find posts -type f -name '*.md' -print0)
+            while IFS= read -r -d '' file; do
+              sync_asset "$file"
+            done < <(find assets/images -type f -print0)
             exit 0
           fi
 
           while IFS= read -r file; do
             [ -z "$file" ] && continue
-            delete_file "$file"
+            delete_post "$file"
           done < <(git diff --diff-filter=D --name-only HEAD~1 HEAD -- 'posts/*.md' 'posts/**/*.md')
 
           while IFS= read -r file; do
             [ -z "$file" ] && continue
             [ -f "$file" ] || continue
-            sync_file "$file"
+            sync_post "$file"
           done < <(git diff --name-only HEAD~1 HEAD -- 'posts/*.md' 'posts/**/*.md')
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            delete_asset "$file"
+          done < <(git diff --diff-filter=D --name-only HEAD~1 HEAD -- 'assets/images/*' 'assets/images/**/*')
+
+          while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            [ -f "$file" ] || continue
+            sync_asset "$file"
+          done < <(git diff --name-only HEAD~1 HEAD -- 'assets/images/*' 'assets/images/**/*')

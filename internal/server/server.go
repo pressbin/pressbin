@@ -4,12 +4,14 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	assetsupload "pressbin.dev/pressbin/internal/assets"
 	"pressbin.dev/pressbin/internal/config"
 	"pressbin.dev/pressbin/internal/render"
 	"pressbin.dev/pressbin/internal/store"
@@ -20,10 +22,21 @@ type Server struct {
 	config *config.Config
 	router chi.Router
 	assets fs.FS
+	uploader assetsupload.Uploader
 }
 
 func New(st *store.Store, cfg *config.Config, assets fs.FS) *Server {
-	s := &Server{store: st, config: cfg, assets: assets}
+	var uploader assetsupload.Uploader
+	if strings.TrimSpace(cfg.Assets.Upload.StoragePath) != "" {
+		if strings.TrimSpace(cfg.Assets.Upload.Driver) == "" || cfg.Assets.Upload.Driver == "local" {
+			u, err := assetsupload.NewLocalUploader(cfg.Assets.Upload.StoragePath)
+			if err == nil {
+				uploader = u
+			}
+		}
+	}
+
+	s := &Server{store: st, config: cfg, assets: assets, uploader: uploader}
 	s.router = chi.NewRouter()
 	s.routes()
 	return s
@@ -35,6 +48,21 @@ func (s *Server) routes() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Compress(5))
+
+	// Optional: serve synced content assets directly from the Pressbin binary.
+	// In production you may prefer nginx/apache to serve these files.
+	if dir := strings.TrimSpace(s.config.Assets.Upload.StoragePath); dir != "" {
+		if st, err := os.Stat(dir); err != nil {
+			slog.Warn("assets.upload.storage_path not readable", "path", dir, "err", err)
+		} else if !st.IsDir() {
+			slog.Warn("assets.upload.storage_path is not a directory", "path", dir)
+		} else {
+			// NOTE: this only exposes /assets/images/* (not /assets/fonts/* etc) to avoid
+			// colliding with the embedded /assets/* routes used by the Pressbin UI/theme.
+			slog.Info("serving content image files", "path", dir, "url_prefix", "/assets/images/")
+			r.Handle("/assets/images/*", http.StripPrefix("/assets/", http.FileServer(http.Dir(dir))))
+		}
+	}
 
 	sub, err := fs.Sub(s.assets, "assets")
 	if err != nil {
@@ -54,6 +82,8 @@ func (s *Server) routes() {
 		r.Use(s.requireAuth("posts:write"))
 		r.Post("/api/sync", s.handleSync)
 		r.Delete("/api/sync/{slug}", s.handleSyncDelete)
+		r.Post("/api/sync/asset", s.handleSyncAsset)
+		r.Delete("/api/sync/asset/*", s.handleSyncDeleteAsset)
 	})
 
 	r.Group(func(r chi.Router) {

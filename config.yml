@@ -12,5 +12,15 @@ site:
   url: "https://pressbin.dev"
   posts_per_page: 10
 
+# Synced assets are uploaded via POST /api/sync/asset.
+assets:
+  upload:
+    driver: local
+    # This example points at the content repo's `assets/` directory (monorepo dev).
+    # In production, set this to something like: /home/you/public_html/assets
+    storage_path: ../pressbin_blog/assets
+
+  allowed_prefixes: ["images/", "fonts/", "downloads/", "css/"]
+
 log:
   level: info

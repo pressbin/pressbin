@@ -3,8 +3,6 @@ package server
 import (
 	"net/http"
 	"strings"
-
-	"pressbin.dev/pressbin/internal/store"
 )
 
 func (s *Server) requireAuth(permission string) func(http.Handler) http.Handler {
@@ -23,9 +21,7 @@ func (s *Server) requireAuth(permission string) func(http.Handler) http.Handler 
 				return
 			}
 
-			go func(k store.APIKey) {
-				_ = s.store.TouchKey(k.ID)
-			}(key)
+			_ = s.store.TouchKey(key.ID)
 
 			next.ServeHTTP(w, r)
 		})
