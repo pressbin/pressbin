@@ -9,8 +9,13 @@ database:
 site:
   title: "My Blog"
   description: "Writing about Go and things."
-  url: "https://pressbin.dev"
+  url: "http://localhost:8080"
   posts_per_page: 10
+
+theme:
+  # Optional. Absolute URL to a custom CSS file loaded after the default theme CSS.
+  # Example: https://cdn.example.com/pressbin/custom.css
+  custom_css_url: "http://localhost:7331/dracula.css"
 
 # Synced assets are uploaded via POST /api/sync/asset.
 assets:

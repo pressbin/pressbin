@@ -13,11 +13,11 @@ import (
 func IndexPage(posts []store.Post, pd PageData, page, totalPages int) g.Node {
 	return Layout(pd.SiteTitle, pd,
 		h.Div(
-			h.Class("space-y-10"),
+			h.Class("pb-stack pb-stack-lg"),
 			h.Div(
-				h.Class("space-y-4"),
-				h.H1(h.Class("text-3xl font-bold"), g.Text(pd.SiteTitle)),
-				h.P(h.Class("text-gray-600"), g.Text(pd.SiteDescription)),
+				h.Class("pb-stack"),
+				// Avoid repeating the site title (navbar already shows it).
+				g.If(pd.SiteDescription != "", h.P(h.Class("pb-lead"), g.Text(pd.SiteDescription))),
 				searchBox(),
 				h.Div(h.ID("search-results")),
 			),
@@ -29,14 +29,14 @@ func IndexPage(posts []store.Post, pd PageData, page, totalPages int) g.Node {
 
 func searchBox() g.Node {
 	return h.Form(
-		h.Class("w-full"),
+		h.Class("pb-search"),
 		hx.Get("/search"),
 		hx.Target("#search-results"),
 		hx.Trigger("keyup changed delay:300ms from:input[name='q']"),
 		h.Input(
 			h.Type("search"),
 			h.Name("q"),
-			h.Class("w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"),
+			h.Class("pb-input"),
 			h.Placeholder("Search posts..."),
 		),
 	)
@@ -44,13 +44,13 @@ func searchBox() g.Node {
 
 func postList(posts []store.Post, compact bool) g.Node {
 	if len(posts) == 0 {
-		return h.P(h.Class("text-gray-500"), g.Text("No posts yet."))
+		return h.P(h.Class("pb-muted"), g.Text("No posts yet."))
 	}
 	items := make([]g.Node, 0, len(posts))
 	for _, p := range posts {
 		items = append(items, postCard(p, compact))
 	}
-	return h.Div(h.Class("space-y-8"), g.Group(items))
+	return h.Div(h.Class("pb-posts"), g.Group(items))
 }
 
 func postCard(p store.Post, compact bool) g.Node {
@@ -59,20 +59,22 @@ func postCard(p store.Post, compact bool) g.Node {
 	if summary == "" && compact {
 		summary = trimWords(stripHTML(p.ContentHTML), 40)
 	}
-	cls := "block group"
+	cls := "pb-post-card"
 	if compact {
-		cls += " py-3 border-b border-gray-100 last:border-0"
+		cls += " pb-post-card-compact"
 	}
-	return h.A(
+	return h.Div(
 		h.Class(cls),
-		h.Href(href),
-		h.H2(h.Class("text-xl font-semibold text-gray-900 group-hover:text-blue-600"), g.Text(p.Title)),
+		h.H2(
+			h.Class("pb-post-title"),
+			h.A(h.Href(href), g.Text(p.Title)),
+		),
 		h.Div(
-			h.Class("text-sm text-gray-500 mt-1"),
+			h.Class("pb-post-meta"),
 			g.Text(p.PublishedAt.Format("Jan 2, 2006")),
 			tagList(p.Tags),
 		),
-		g.If(summary != "", h.P(h.Class("text-gray-600 mt-2 line-clamp-2"), g.Text(summary))),
+		g.If(summary != "", h.P(h.Class("pb-post-summary"), g.Text(summary))),
 	)
 }
 
@@ -86,11 +88,11 @@ func pagination(basePath string, page, totalPages int) g.Node {
 		if page-1 > 1 {
 			prev = basePath + "?page=" + strconv.Itoa(page-1)
 		}
-		nodes = append(nodes, h.A(h.Class("text-blue-600 hover:underline"), h.Href(prev), g.Text("← Newer")))
+		nodes = append(nodes, h.A(h.Class("pb-link"), h.Href(prev), g.Text("← Newer")))
 	}
-	nodes = append(nodes, h.Span(h.Class("text-gray-500 text-sm"), g.Text("Page "+strconv.Itoa(page)+" of "+strconv.Itoa(totalPages))))
+	nodes = append(nodes, h.Span(h.Class("pb-muted pb-text-sm"), g.Text("Page "+strconv.Itoa(page)+" of "+strconv.Itoa(totalPages))))
 	if page < totalPages {
-		nodes = append(nodes, h.A(h.Class("text-blue-600 hover:underline"), h.Href(basePath+"?page="+strconv.Itoa(page+1)), g.Text("Older →")))
+		nodes = append(nodes, h.A(h.Class("pb-link"), h.Href(basePath+"?page="+strconv.Itoa(page+1)), g.Text("Older →")))
 	}
-	return h.Div(h.Class("flex justify-between items-center pt-8 border-t border-gray-200"), g.Group(nodes))
+	return h.Div(h.Class("pb-pagination"), g.Group(nodes))
 }

@@ -10,14 +10,17 @@ import (
 func PostPage(post store.Post, pd PageData) g.Node {
 	return Layout(post.Title, pd,
 		h.Article(
-			h.H1(h.Class("text-3xl font-bold mb-2"), g.Text(post.Title)),
-			h.Div(
-				h.Class("text-gray-500 text-sm mb-8 flex flex-wrap items-center gap-2"),
-				g.Text(post.PublishedAt.Format("January 2, 2006")),
-				tagList(post.Tags),
+			h.Header(
+				h.Class("pb-post-header"),
+				h.H1(h.Class("pb-post-h1"), g.Text(post.Title)),
+				h.Div(
+					h.Class("pb-post-meta"),
+					g.Text(post.PublishedAt.Format("January 2, 2006")),
+					tagList(post.Tags),
+				),
 			),
 			h.Div(
-				h.Class("prose prose-gray max-w-none"),
+				h.Class("pb-prose"),
 				g.Raw(post.ContentHTML),
 			),
 		),
@@ -28,16 +31,13 @@ func tagList(tags []string) g.Node {
 	if len(tags) == 0 {
 		return g.Group(nil)
 	}
-	nodes := make([]g.Node, 0, len(tags)*2)
-	for i, t := range tags {
-		if i > 0 {
-			nodes = append(nodes, g.Text(" · "))
-		}
+	nodes := make([]g.Node, 0, len(tags))
+	for _, t := range tags {
 		nodes = append(nodes, h.A(
-			h.Class("text-blue-600 hover:underline"),
+			h.Class("pb-tag"),
 			h.Href("/tag/"+t),
 			g.Text(t),
 		))
 	}
-	return h.Span(h.Class("text-gray-400"), g.Group(nodes))
+	return h.Span(h.Class("pb-tags"), g.Group(nodes))
 }

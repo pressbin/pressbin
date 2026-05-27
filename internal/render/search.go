@@ -13,13 +13,13 @@ func SearchResults(posts []store.Post, query string) g.Node {
 	}
 	if len(posts) == 0 {
 		return h.Div(
-			h.Class("mt-4 p-4 bg-white border border-gray-200 rounded-lg"),
-			h.P(h.Class("text-gray-600"), g.Text("No results for \""+query+"\".")),
+			h.Class("pb-search-empty"),
+			h.P(h.Class("pb-muted"), g.Text("No results for \""+query+"\".")),
 		)
 	}
 	return h.Div(
-		h.Class("mt-4 space-y-2"),
-		h.P(h.Class("text-sm text-gray-500"), g.Text("Results for \""+query+"\"")),
+		h.Class("pb-search-results"),
+		h.P(h.Class("pb-muted pb-text-sm"), g.Text("Results for \""+query+"\"")),
 		postList(posts, true),
 	)
 }

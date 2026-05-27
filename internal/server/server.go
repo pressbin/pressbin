@@ -144,5 +144,6 @@ func (s *Server) pageData() render.PageData {
 		SiteTitle:       get("site_title", s.config.Site.Title),
 		SiteDescription: get("site_description", s.config.Site.Description),
 		SiteURL:         get("site_url", s.config.Site.URL),
+		CustomCSSURL:    s.config.Theme.CustomCSSURL,
 	}
 }

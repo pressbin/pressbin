@@ -11,5 +11,8 @@ site:
   url: "https://pressbin.dev"
   posts_per_page: 10
 
+theme:
+  custom_css_url: ""
+
 log:
   level: info

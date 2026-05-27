@@ -13,6 +13,7 @@ import (
 )
 
 type ParseResult struct {
+	Slug        string
 	Title       string
 	Summary     string
 	Tags        []string
@@ -42,6 +43,7 @@ func Parse(content []byte) (ParseResult, error) {
 	metaData := meta.Get(ctx)
 
 	return ParseResult{
+		Slug:        getString(metaData, "slug"),
 		Title:       getString(metaData, "title"),
 		Summary:     getString(metaData, "summary"),
 		Tags:        getStringSlice(metaData, "tags"),

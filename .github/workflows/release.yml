@@ -47,7 +47,7 @@ jobs:
         if: steps.gate.outputs.run == 'true'
         id: version
         run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             VER='${{ github.ref_name }}'
           elif [ -n "${{ inputs.version }}" ]; then
             VER='${{ inputs.version }}'
@@ -78,7 +78,7 @@ jobs:
           sha256sum pressbin-* > checksums.txt
 
       - name: Create GitHub Release
-        if: steps.gate.outputs.run == 'true' && github.ref_type == 'tag'
+        if: steps.gate.outputs.run == 'true' && startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
@@ -86,7 +86,8 @@ jobs:
           generate_release_notes: true
           prerelease: false
           files: |
-            dist/*
+            dist/pressbin-*
+            dist/checksums.txt
           body: |
             ## Pressbin ${{ github.ref_name }}
 

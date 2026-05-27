@@ -11,8 +11,8 @@ func TagPage(tag string, posts []store.Post, pd PageData, page, totalPages int) 
 	title := "Tag: " + tag
 	return Layout(title, pd,
 		h.Div(
-			h.Class("space-y-8"),
-			h.H1(h.Class("text-3xl font-bold"), g.Text(title)),
+			h.Class("pb-stack pb-stack-lg"),
+			h.H1(h.Class("pb-h1"), g.Text(title)),
 			postList(posts, false),
 			pagination("/tag/"+tag, page, totalPages),
 		),
