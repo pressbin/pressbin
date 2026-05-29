@@ -55,7 +55,13 @@ func TestAssets() fs.FS {
 // NewServer wires a test server with the given store.
 func NewServer(t *testing.T, st *store.Store) *server.Server {
 	t.Helper()
-	return server.New(st, TestConfig(), TestAssets())
+	return NewServerWithVersion(t, st, "dev")
+}
+
+// NewServerWithVersion wires a test server with an explicit API version string.
+func NewServerWithVersion(t *testing.T, st *store.Store, version string) *server.Server {
+	t.Helper()
+	return server.New(st, TestConfig(), TestAssets(), version)
 }
 
 // MustAdminKey creates an admin API key and returns the raw secret.

@@ -16,66 +16,32 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Install dependencies
-        run: pip install requests pyyaml
-
-      - name: Sync posts and assets
+      - name: Sync to Pressbin
         env:
           PRESSBIN_URL: ${{ secrets.PRESSBIN_URL }}
           PRESSBIN_KEY: ${{ secrets.PRESSBIN_KEY }}
+          PRESSBIN_RELEASE_REPO: pressbin/pressbin
+          # Optional: pin client version when server reports "dev"
+          # PRESSBIN_SYNC_VERSION: v1.0.0
         run: |
-          set -e
-          shopt -s globstar nullglob
+          set -euo pipefail
 
-          sync_post() {
-            echo "Syncing post $1..."
-            python3 .github/scripts/push.py "$1"
-          }
-
-          delete_post() {
-            echo "Deleting post $1..."
-            python3 .github/scripts/delete.py "$1"
-          }
-
-          sync_asset() {
-            echo "Syncing asset $1..."
-            python3 .github/scripts/push_asset.py "$1"
-          }
-
-          delete_asset() {
-            echo "Deleting asset $1..."
-            python3 .github/scripts/delete_asset.py "$1"
-          }
-
-          if ! git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-            echo "First push: syncing all posts and images"
-            while IFS= read -r -d '' file; do
-              sync_post "$file"
-            done < <(find posts -type f -name '*.md' -print0)
-            while IFS= read -r -d '' file; do
-              sync_asset "$file"
-            done < <(find assets/images -type f -print0)
-            exit 0
+          VERSION="${PRESSBIN_SYNC_VERSION:-}"
+          if [ -z "$VERSION" ]; then
+            VERSION="$(curl -fsSL "${PRESSBIN_URL%/}/api/version" | jq -r '.version')"
           fi
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "error: could not resolve version from ${PRESSBIN_URL}/api/version" >&2
+            echo "Set repository variable PRESSBIN_SYNC_VERSION to a release tag (e.g. v1.0.0)." >&2
+            exit 1
+          fi
+          echo "Pressbin server version: $VERSION"
 
-          while IFS= read -r file; do
-            [ -z "$file" ] && continue
-            delete_post "$file"
-          done < <(git diff --diff-filter=D --name-only HEAD~1 HEAD -- 'posts/*.md' 'posts/**/*.md')
+          ASSET="pressbin-sync-linux-amd64"
+          BASE="https://github.com/${PRESSBIN_RELEASE_REPO}/releases/download/${VERSION}"
+          curl -fsSL "$BASE/${ASSET}" -o pressbin-sync
+          curl -fsSL "$BASE/checksums.txt" -o checksums.txt
+          grep " ${ASSET}\$" checksums.txt | sha256sum -c -
+          chmod +x pressbin-sync
 
-          while IFS= read -r file; do
-            [ -z "$file" ] && continue
-            [ -f "$file" ] || continue
-            sync_post "$file"
-          done < <(git diff --name-only HEAD~1 HEAD -- 'posts/*.md' 'posts/**/*.md')
-
-          while IFS= read -r file; do
-            [ -z "$file" ] && continue
-            delete_asset "$file"
-          done < <(git diff --diff-filter=D --name-only HEAD~1 HEAD -- 'assets/images/*' 'assets/images/**/*')
-
-          while IFS= read -r file; do
-            [ -z "$file" ] && continue
-            [ -f "$file" ] || continue
-            sync_asset "$file"
-          done < <(git diff --name-only HEAD~1 HEAD -- 'assets/images/*' 'assets/images/**/*')
+          ./pressbin-sync run "$GITHUB_WORKSPACE"

@@ -19,7 +19,7 @@ func TestSyncAsset_createUpdateDelete(t *testing.T) {
 
 	st := testutil.NewStore(t)
 	key := testutil.MustSyncKey(t, st)
-	h := server.New(st, cfg, testutil.TestAssets()).Handler()
+	h := server.New(st, cfg, testutil.TestAssets(), "dev").Handler()
 
 	body, _ := json.Marshal(map[string]string{
 		"path":           "images/test.svg",
@@ -79,7 +79,7 @@ func TestSyncAsset_rejectsTraversal(t *testing.T) {
 	cfg.Assets.Path = root
 	st := testutil.NewStore(t)
 	key := testutil.MustSyncKey(t, st)
-	h := server.New(st, cfg, testutil.TestAssets()).Handler()
+	h := server.New(st, cfg, testutil.TestAssets(), "dev").Handler()
 
 	body, _ := json.Marshal(map[string]string{
 		"path":           "../escape.svg",
@@ -98,7 +98,7 @@ func TestSyncAsset_allowsFontsPrefix(t *testing.T) {
 
 	st := testutil.NewStore(t)
 	key := testutil.MustSyncKey(t, st)
-	h := server.New(st, cfg, testutil.TestAssets()).Handler()
+	h := server.New(st, cfg, testutil.TestAssets(), "dev").Handler()
 
 	body, _ := json.Marshal(map[string]string{
 		"path":           "fonts/custom.woff2",

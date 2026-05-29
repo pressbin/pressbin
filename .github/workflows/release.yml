@@ -112,6 +112,9 @@ jobs:
 
             Keys: `~/.pressbin/admin.key` (admin API), `~/.pressbin/sync.key` (GitHub Actions).
 
+            ### Content sync (GitHub Actions)
+            Blog repos download `pressbin-sync-linux-amd64` from this release (version from `GET /api/version` on your instance). No Python scripts in content repos.
+
             For git-push publishing, use the [blog content template](https://github.com/pressbin/pressbin-blog-template).
 
             ### Verify checksum

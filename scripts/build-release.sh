@@ -21,13 +21,18 @@ mkdir -p dist
 for TARGET in "${TARGETS[@]}"; do
   OS="${TARGET%/*}"
   ARCH="${TARGET#*/}"
-  OUTPUT="dist/pressbin-$OS-$ARCH"
 
-  [ "$OS" = "windows" ] && OUTPUT="$OUTPUT.exe"
-
-  echo "Building $OS/$ARCH..."
+  echo "Building pressbin $OS/$ARCH..."
+  OUT="dist/pressbin-$OS-$ARCH"
+  [ "$OS" = "windows" ] && OUT="$OUT.exe"
   CGO_ENABLED=0 GOOS=$OS GOARCH=$ARCH \
-    go build -ldflags="$LDFLAGS" -o "$OUTPUT" .
+    go build -ldflags="$LDFLAGS" -o "$OUT" .
+
+  echo "Building pressbin-sync $OS/$ARCH..."
+  OUT_SYNC="dist/pressbin-sync-$OS-$ARCH"
+  [ "$OS" = "windows" ] && OUT_SYNC="$OUT_SYNC.exe"
+  CGO_ENABLED=0 GOOS=$OS GOARCH=$ARCH \
+    go build -ldflags="$LDFLAGS" -o "$OUT_SYNC" ./cmd/pressbin-sync
 done
 
 echo "Done. Binaries in ./dist/"

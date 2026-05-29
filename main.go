@@ -156,7 +156,7 @@ func runServe(args []string) int {
 		return 1
 	}
 
-	srv := server.New(st, cfg, assetsFS)
+	srv := server.New(st, cfg, assetsFS, Version)
 	addr := cfg.ListenAddr()
 	slog.Info("listening", "addr", addr)
 	if err := http.ListenAndServe(addr, srv.Handler()); err != nil {

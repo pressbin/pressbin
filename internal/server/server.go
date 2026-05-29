@@ -20,12 +20,13 @@ import (
 type Server struct {
 	store    *store.Store
 	config   *config.Config
+	version  string
 	router   chi.Router
 	assets   fs.FS
 	uploader assetsupload.Uploader
 }
 
-func New(st *store.Store, cfg *config.Config, themeFS fs.FS) *Server {
+func New(st *store.Store, cfg *config.Config, themeFS fs.FS, version string) *Server {
 	var uploader assetsupload.Uploader
 	if dir := strings.TrimSpace(cfg.Assets.Path); dir != "" {
 		u, err := assetsupload.NewLocalUploader(dir)
@@ -36,7 +37,10 @@ func New(st *store.Store, cfg *config.Config, themeFS fs.FS) *Server {
 		}
 	}
 
-	s := &Server{store: st, config: cfg, assets: themeFS, uploader: uploader}
+	if version == "" {
+		version = "dev"
+	}
+	s := &Server{store: st, config: cfg, version: version, assets: themeFS, uploader: uploader}
 	s.router = chi.NewRouter()
 	s.routes()
 	return s
@@ -74,6 +78,7 @@ func (s *Server) routes() {
 	r.Get("/tag/{tag}", s.handleTag)
 	r.Get("/search", s.handleSearch)
 	r.Get("/feed.xml", s.handleRSS)
+	r.Get("/api/version", s.handleVersion)
 
 	r.Group(func(r chi.Router) {
 		r.Use(s.requireAuth("posts:write"))

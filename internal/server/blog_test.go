@@ -105,7 +105,7 @@ func TestBlog_contentStaticImages(t *testing.T) {
 	cfg := testutil.TestConfig()
 	cfg.Assets.Path = root
 	st := testutil.NewStore(t)
-	h := server.New(st, cfg, testutil.TestAssets()).Handler()
+	h := server.New(st, cfg, testutil.TestAssets(), "dev").Handler()
 	w := testutil.DoRequest(t, h, http.MethodGet, "/assets/images/test.svg", nil, "")
 	if w.Code != http.StatusOK {
 		t.Fatalf("content image status=%d body=%s", w.Code, w.Body.String())

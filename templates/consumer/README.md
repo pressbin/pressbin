@@ -8,42 +8,41 @@ A **separate Git repository** for your Markdown posts. Pressbin itself runs else
 your-blog-content/
 ├── posts/
 │   ├── hello-world.md
-│   └── 2026/my-post.md          # nested paths are fine
+│   └── 2026/my-post.md
+├── assets/
+│   └── images/              # synced to Pressbin (see workflow)
 ├── .github/
-│   ├── workflows/
-│   │   └── sync.yml
-│   └── scripts/
-│       ├── push.py
-│       └── delete.py
-└── README.md                     # optional (this file)
+│   └── workflows/sync.yml
+└── README.md
 ```
 
 Prefer the standalone template at [`pressbin_blog_template/`](../../../pressbin_blog_template/) in the stack (or “Use this template” on GitHub). You can also copy everything under `templates/consumer/` from this repo.
 
 ## Setup
 
-1. Deploy Pressbin and save the **admin key** (`pb_admin_...`) from first run.
-2. Create a sync API key:
+1. **Install Pressbin** on your server:
 
    ```bash
-   curl -s -X POST "$PRESSBIN_URL/api/admin/keys" \
-     -H "Authorization: Bearer $ADMIN_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{"label":"github action","type":"sync"}'
+   curl -fsSL https://raw.githubusercontent.com/pressbin/pressbin/main/scripts/install.sh | bash -s -- \
+     --site-url https://your-domain.com
    ```
 
-3. Add GitHub repository secrets:
+2. **Add GitHub repository secrets** on this content repo:
 
    | Secret | Value |
    |--------|--------|
-   | `PRESSBIN_URL` | Base URL (e.g. `https://yourdomain.com`) |
-   | `PRESSBIN_KEY` | The `pb_sync_...` key from step 2 |
+   | `PRESSBIN_URL` | Your public blog URL |
+   | `PRESSBIN_KEY` | Contents of `~/.pressbin/sync.key` (`pb_sync_...`) |
 
-4. Commit posts under `posts/` and push to `main`.
+   Use **`sync.key` only** — admin keys cannot call the sync API.
+
+3. Commit posts under `posts/`, images under `assets/images/`, and push to `main`.
+
+To create extra sync keys later, use `admin.key` with `POST /api/admin/keys` and `{"label":"…","type":"sync"}`.
 
 ## Tags (taxonomy)
 
-Pressbin uses **tags only** — there are no categories. Tags are not stored in a central file; each post declares them in YAML front matter:
+Pressbin uses **tags only** — there are no categories. Tags are declared per post in YAML front matter:
 
 ```yaml
 ---
@@ -52,34 +51,37 @@ date: 2026-05-26
 tags: [go, tutorial]
 summary: Short blurb for the index page.
 status: published
-slug: hello-world          # optional; defaults to filename without .md
+slug: hello-world
 ---
 ```
 
-**Conventions:**
-
-- Use short, lowercase tags (the server normalizes to lowercase).
-- Edit `tags` in the file and push — the live site updates on the next sync.
-- Optionally pick one tag as a broad “topic” (e.g. `dev`, `life`); that is convention only.
-- Set `slug` explicitly on important posts so renames do not change the URL.
-
-Published posts appear on `/tag/{name}`. All tags are listed at `/tags` on your site.
+Published posts appear on `/tag/{name}`. All tags are listed at `/tags`.
 
 ## How sync works
 
-On push to `main` (when `posts/**/*.md` changes):
+On push to `main` when `posts/` or `assets/images/` changes, GitHub Actions:
 
-1. **First push** (no parent commit): syncs every `posts/**/*.md` file.
-2. **Later pushes**: deletes removed posts, then syncs changed or added files.
+1. Calls `GET {PRESSBIN_URL}/api/version` on **your** instance.
+2. Downloads matching `pressbin-sync-linux-amd64` from [github.com/pressbin/pressbin](https://github.com/pressbin/pressbin) releases (checksum verified).
+3. Runs `pressbin-sync run` on the repo checkout.
+
+**First push:** syncs every `posts/**/*.md` and `assets/images/**` file.
+
+**Later pushes:** deletes removed posts/images, then syncs changed or added files.
 
 | Action in Git | Effect on Pressbin |
 |---------------|-------------------|
 | Edit `tags:` and push | Tags replaced for that slug |
 | Add new `.md` under `posts/` | Created on sync |
-| Delete `.md` | Post removed via `delete.py` |
-| Rename file without `slug:` | New slug; old post remains until you delete it in Git or via admin API |
-| `status: draft` | Stored but hidden from index and tag pages |
+| Delete `.md` | Post removed |
+| Add / change file under `assets/images/` | Uploaded |
+| Delete image | Removed |
+| `status: draft` | Hidden from public index |
+
+Upgrade Pressbin on your server (`install.sh` or a new release binary); the next blog push picks up the matching sync client automatically. No need to update this workflow when sync logic changes.
+
+If your server reports version `dev`, set repository variable `PRESSBIN_SYNC_VERSION` to a release tag (e.g. `v1.0.0`).
 
 ## Post format
 
-See `posts/example-post.md`. The filename is the slug when `slug` is omitted in front matter.
+See `posts/example-post.md`. Use `/assets/images/...` in Markdown (root-absolute paths), not `raw.githubusercontent.com`.
