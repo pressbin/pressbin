@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// Run syncs posts and assets under repo to Pressbin (GitHub Actions workflow logic).
+// Run syncs posts and assets under repo to Pressbin (incremental git diff on push).
 func Run(c *Client, repo string) error {
 	repo, err := filepath.Abs(repo)
 	if err != nil {
@@ -20,27 +20,7 @@ func Run(c *Client, repo string) error {
 
 	if !hasParentCommit(repo) {
 		fmt.Println("First push: syncing all posts and images")
-		posts, err := findFiles(repo, "posts", ".md")
-		if err != nil {
-			return err
-		}
-		for _, f := range posts {
-			fmt.Printf("Syncing post %s...\n", f)
-			if err := c.PushPost(filepath.Join(repo, f)); err != nil {
-				return err
-			}
-		}
-		assets, err := findFilesUnder(repo, filepath.Join("assets", "images"))
-		if err != nil {
-			return err
-		}
-		for _, f := range assets {
-			fmt.Printf("Syncing asset %s...\n", f)
-			if err := c.PushAsset(filepath.Join(repo, f)); err != nil {
-				return err
-			}
-		}
-		return nil
+		return syncAll(c, repo)
 	}
 
 	for _, f := range gitDiffNames(repo, true, "posts/*.md", "posts/**/*.md") {
@@ -77,6 +57,40 @@ func Run(c *Client, repo string) error {
 		}
 	}
 
+	return nil
+}
+
+// RunAll uploads every posts/**/*.md and assets/images/** file (full resync, no git diff).
+func RunAll(c *Client, repo string) error {
+	repo, err := filepath.Abs(repo)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Full sync: uploading all posts and images")
+	return syncAll(c, repo)
+}
+
+func syncAll(c *Client, repo string) error {
+	posts, err := findFiles(repo, "posts", ".md")
+	if err != nil {
+		return err
+	}
+	for _, f := range posts {
+		fmt.Printf("Syncing post %s...\n", f)
+		if err := c.PushPost(filepath.Join(repo, f)); err != nil {
+			return err
+		}
+	}
+	assets, err := findFilesUnder(repo, filepath.Join("assets", "images"))
+	if err != nil {
+		return err
+	}
+	for _, f := range assets {
+		fmt.Printf("Syncing asset %s...\n", f)
+		if err := c.PushAsset(filepath.Join(repo, f)); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 

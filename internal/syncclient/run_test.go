@@ -12,6 +12,30 @@ import (
 	"pressbin.dev/pressbin/internal/syncclient"
 )
 
+func TestRunAll_fullSync(t *testing.T) {
+	var syncCount int
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPost && (r.URL.Path == "/api/sync" || r.URL.Path == "/api/sync/asset") {
+			syncCount++
+			w.WriteHeader(http.StatusOK)
+			_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		}
+	}))
+	defer srv.Close()
+
+	repo := t.TempDir()
+	writeFile(t, repo, "posts/a.md", "---\ntitle: A\nslug: a\n---\n\nx\n")
+	writeFile(t, repo, "assets/images/x.svg", "<svg/>")
+
+	c := &syncclient.Client{BaseURL: srv.URL, Key: "k", HTTP: srv.Client()}
+	if err := syncclient.RunAll(c, repo); err != nil {
+		t.Fatalf("RunAll: %v", err)
+	}
+	if syncCount != 2 {
+		t.Fatalf("sync calls = %d, want 2", syncCount)
+	}
+}
+
 func TestRun_firstPush(t *testing.T) {
 	if _, err := exec.LookPath("git"); err != nil {
 		t.Skip("git not available")

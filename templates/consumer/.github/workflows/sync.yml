@@ -7,6 +7,7 @@ on:
       - "posts/**/*.md"
       - "posts/*.md"
       - "assets/images/**"
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -14,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: ${{ github.event_name == 'push' && 2 || 1 }}
 
       - name: Sync to Pressbin
         env:
@@ -39,9 +40,14 @@ jobs:
 
           ASSET="pressbin-sync-linux-amd64"
           BASE="https://github.com/${PRESSBIN_RELEASE_REPO}/releases/download/${VERSION}"
-          curl -fsSL "$BASE/${ASSET}" -o pressbin-sync
+          curl -fsSL "$BASE/${ASSET}" -o "${ASSET}"
           curl -fsSL "$BASE/checksums.txt" -o checksums.txt
           grep " ${ASSET}\$" checksums.txt | sha256sum -c -
-          chmod +x pressbin-sync
+          chmod +x "${ASSET}"
 
-          ./pressbin-sync run "$GITHUB_WORKSPACE"
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then
+            echo "Manual run: full sync (all posts and assets)"
+            ./"${ASSET}" run --all "$GITHUB_WORKSPACE"
+          else
+            ./"${ASSET}" run "$GITHUB_WORKSPACE"
+          fi

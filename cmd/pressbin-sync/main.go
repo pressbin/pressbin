@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 
@@ -37,8 +38,10 @@ func printUsage() {
 Sync a content repository to Pressbin (for CI or local use).
 
 Usage:
-  pressbin-sync run [repo-dir]
+  pressbin-sync run [--all] [repo-dir]
   pressbin-sync version
+
+  --all   Upload every post and image (full resync; ignores git history)
 
 Environment:
   PRESSBIN_URL   Public blog URL (required)
@@ -49,14 +52,26 @@ Default repo directory: current working directory
 }
 
 func run(args []string) int {
+	fs := flag.NewFlagSet("run", flag.ExitOnError)
+	all := fs.Bool("all", false, "sync every post and asset (full resync)")
+	_ = fs.Parse(args)
+
 	repo := "."
-	if len(args) > 0 {
-		repo = args[0]
+	if fs.NArg() > 0 {
+		repo = fs.Arg(0)
 	}
+
 	client, err := syncclient.NewFromEnv()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "pressbin-sync: %v\n", err)
 		return 1
+	}
+	if *all {
+		if err := syncclient.RunAll(client, repo); err != nil {
+			fmt.Fprintf(os.Stderr, "pressbin-sync: %v\n", err)
+			return 1
+		}
+		return 0
 	}
 	if err := syncclient.Run(client, repo); err != nil {
 		fmt.Fprintf(os.Stderr, "pressbin-sync: %v\n", err)
