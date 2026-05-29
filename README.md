@@ -17,6 +17,18 @@ export PATH="$HOME/.pressbin/bin:$PATH"
 pressbin serve
 ```
 
+Custom install directory:
+
+```bash
+curl -fsSL .../install.sh | bash -s -- \
+  --site-url https://blog.example.com \
+  --home ~/domains/blog.example.com/.pressbin
+export PATH="$HOME/domains/blog.example.com/.pressbin/bin:$PATH"
+pressbin serve   # loads …/.pressbin/config.yml from the binary path
+```
+
+Or explicitly: `pressbin serve --config ~/path/.pressbin/config.yml`.
+
 - **Admin key** (`admin.key`): manage posts/settings and create keys via `/api/admin/*`. Cannot sync.
 - **Sync key** (`sync.key`): GitHub Actions / `POST /api/sync*`. Cannot access admin APIs.
 
@@ -73,6 +85,9 @@ Local dev: use `make setup-dev` (not `config.yml` in the repo root). See `config
 
 CLI: `pressbin setup`, `pressbin check`, `pressbin serve` (default), `pressbin version`.
 
+Default config resolution: `config.yml` next to the install tree (`…/bin/pressbin` →
+`…/config.yml`), then `.pressbin-dev/`, `~/.pressbin/`, then `./config.yml`.
+
 Production example (no config file):
 
 ```bash
@@ -122,7 +137,8 @@ Manual build:
 # Optional version: v1.0.0-rc1 or sha-abc1234
 ```
 
-Download from [GitHub Releases](https://github.com/pressbin/pressbin/releases).
+Download from [GitHub Releases](https://github.com/pressbin/pressbin/releases):
+`pressbin-{os}-{arch}` (server) and `pressbin-sync-{os}-{arch}` (content-repo CI).
 Use `config.yml.example` at the repo root as your starting config.
 
 Local build:
@@ -135,14 +151,35 @@ make release-bundle       # optional tarball with config + sync workflow
 
 ## Content sync (GitHub Action)
 
-For a **separate content repo**, use [`../pressbin_blog_template/`](../pressbin_blog_template/)
-(or copy `templates/consumer/` — kept in sync with the template). Tags live in
-each post’s YAML front matter; see the template README for layout and conventions.
+Content lives in a **separate Git repo** — use [`../pressbin_blog_template/`](../pressbin_blog_template/)
+(or copy `templates/consumer/`). Tags are per-post YAML front matter; see the template README.
 
-Secrets needed in the **content repo** on GitHub:
+**Secrets** on the content repo:
 
-- `PRESSBIN_URL` (e.g. `https://pressbin.dev`)
-- `PRESSBIN_KEY` (a `pb_sync_...` key created via the admin API)
+| Secret | Value |
+|--------|--------|
+| `PRESSBIN_URL` | Your public blog URL (your instance, e.g. `https://blog.example.com`) |
+| `PRESSBIN_KEY` | `pb_sync_...` from `sync.key` or `POST /api/admin/keys` |
+
+**On push to `main`**, Actions:
+
+1. `GET {PRESSBIN_URL}/api/version` on your server
+2. Download matching `pressbin-sync-linux-amd64` from [GitHub Releases](https://github.com/pressbin/pressbin/releases) (checksum verified)
+3. Run `pressbin-sync run` (incremental git diff)
+
+**Manual full resync:** Actions → “Sync content to Pressbin” → **Run workflow** →
+`pressbin-sync run --all` (every post and `assets/images/**` file).
+
+Local full sync (same as manual CI):
+
+```bash
+export PRESSBIN_URL=https://blog.example.com
+export PRESSBIN_KEY=pb_sync_...
+pressbin-sync run --all /path/to/content-repo
+```
+
+Server exposes `GET /api/version` (public) so CI picks the matching sync client release.
+Upgrade the server binary only; blog workflows stay thin and rarely need changes.
 
 ## Admin API
 
