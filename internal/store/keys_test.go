@@ -2,22 +2,27 @@ package store
 
 import (
 	"database/sql"
+	"strings"
 	"testing"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
 func TestAPIKey_HasPermission(t *testing.T) {
-	k := APIKey{Permissions: []string{"posts:write"}}
-	if !k.HasPermission("posts:write") {
+	sync := APIKey{Permissions: []string{"posts:write"}}
+	if !sync.HasPermission("posts:write") {
 		t.Error("expected posts:write")
 	}
-	if k.HasPermission("*") {
-		t.Error("sync key should not have wildcard")
+	if sync.HasPermission("admin") {
+		t.Error("sync key should not have admin")
 	}
-	admin := APIKey{Permissions: []string{"*"}}
-	if !admin.HasPermission("anything") {
-		t.Error("admin wildcard should allow anything")
+
+	admin := APIKey{Permissions: []string{"admin"}}
+	if !admin.HasPermission("admin") {
+		t.Error("expected admin")
+	}
+	if admin.HasPermission("posts:write") {
+		t.Error("admin key should not have posts:write")
 	}
 }
 
@@ -43,6 +48,27 @@ func TestBootstrap_createsAdminOnce(t *testing.T) {
 	}
 	if len(keys) != 1 {
 		t.Fatalf("keys count = %d", len(keys))
+	}
+	if keys[0].Permissions[0] != "admin" {
+		t.Errorf("perms = %v", keys[0].Permissions)
+	}
+}
+
+func TestCreateSyncKey(t *testing.T) {
+	st := openTestStore(t)
+	raw, err := st.CreateSyncKey("github sync")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(raw, "pb_sync_") {
+		t.Fatalf("key = %q", raw)
+	}
+	found, err := st.FindKeyByRaw(raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !found.HasPermission("posts:write") || found.HasPermission("admin") {
+		t.Errorf("perms = %v", found.Permissions)
 	}
 }
 
@@ -79,7 +105,7 @@ func TestRevokeKey(t *testing.T) {
 	st := openTestStore(t)
 	k := APIKey{
 		ID: "revoke01", Label: "x", Prefix: "pb_admin_",
-		Hash: "not-used", Permissions: []string{"*"},
+		Hash: "not-used", Permissions: []string{"admin"},
 	}
 	if err := st.CreateKey(k); err != nil {
 		t.Fatal(err)
@@ -94,12 +120,12 @@ func TestRevokeKey(t *testing.T) {
 
 func TestKeyPrefixForType(t *testing.T) {
 	prefix, perms, err := KeyPrefixForType("sync")
-	if err != nil || prefix != "pb_sync_" || len(perms) != 1 {
+	if err != nil || prefix != "pb_sync_" || perms[0] != "posts:write" {
 		t.Fatalf("sync: prefix=%q perms=%v err=%v", prefix, perms, err)
 	}
 	prefix, perms, err = KeyPrefixForType("admin")
-	if err != nil || prefix != "pb_admin_" {
-		t.Fatalf("admin: %v", err)
+	if err != nil || prefix != "pb_admin_" || perms[0] != "admin" {
+		t.Fatalf("admin: prefix=%q perms=%v err=%v", prefix, perms, err)
 	}
 	if _, _, err = KeyPrefixForType("invalid"); err == nil {
 		t.Error("expected error")

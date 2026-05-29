@@ -33,7 +33,7 @@ func Layout(title string, pd PageData, content g.Node) g.Node {
 			h.Link(h.Rel("preconnect"), h.Href("https://fonts.googleapis.com")),
 			h.Link(h.Rel("preconnect"), h.Href("https://fonts.gstatic.com"), h.CrossOrigin("")),
 			h.Link(h.Rel("stylesheet"), h.Href("https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap")),
-			h.Link(h.Rel("stylesheet"), h.Href("/assets/style.css")),
+			h.Link(h.Rel("stylesheet"), h.Href("/theme/style.css")),
 			g.If(strings.TrimSpace(pd.CustomCSSURL) != "",
 				h.Link(h.Rel("stylesheet"), h.Href(pd.CustomCSSURL)),
 			),

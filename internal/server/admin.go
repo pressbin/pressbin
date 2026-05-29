@@ -177,22 +177,17 @@ func (s *Server) handleAdminListKeys(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) handleAdminCreateKey(w http.ResponseWriter, r *http.Request) {
 	var body struct {
-		Label       string   `json:"label"`
-		Type        string   `json:"type"`
-		Permissions []string `json:"permissions"`
+		Label string `json:"label"`
+		Type  string `json:"type"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		writeError(w, 400, "invalid request body")
 		return
 	}
-	prefix, defaultPerms, err := store.KeyPrefixForType(body.Type)
+	prefix, perms, err := store.KeyPrefixForType(body.Type)
 	if err != nil {
 		writeError(w, 400, err.Error())
 		return
-	}
-	perms := body.Permissions
-	if len(perms) == 0 {
-		perms = defaultPerms
 	}
 	raw := prefix + store.RandomKeySuffix(32)
 	hash, err := bcrypt.GenerateFromPassword([]byte(raw), bcrypt.DefaultCost)

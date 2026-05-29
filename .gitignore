@@ -2,6 +2,10 @@
 tmp/
 bin/
 dist/
+.pressbin-dev/
+# Local config/DB in repo root are not used — dev uses .pressbin-dev/ only.
+config.yml
+config.localtest.yml
 *.db
 *.db-shm
 *.db-wal

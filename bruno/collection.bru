@@ -1,12 +1,10 @@
-headers {
-  Authorization: Bearer pb_admin_ThmHwiy6Dvygb8tWEKyENPBuPiGP0RQd
-}
-
 auth {
-  mode: bearer
+  mode: none
 }
 
 docs {
-  Admin API for Pressbin. Requires a `pb_admin_...` key (`Authorization: Bearer ...`).
-  Set `adminKey` in the **local** environment (printed once on first server start).
+  Pressbin HTTP API collection.
+  
+  - **admin/** — `pb_admin_...` from `admin.key` (setup). Admin cannot sync.
+  - **sync/** — `pb_sync_...` from `sync.key` (setup). Sync cannot access admin APIs.
 }

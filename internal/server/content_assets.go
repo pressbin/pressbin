@@ -16,15 +16,14 @@ import (
 
 const maxAssetBytes = 5 << 20 // 5 MiB
 
-var errAssetsNotConfigured = errors.New("assets upload storage_path is not configured")
+var errAssetsNotConfigured = errors.New("assets.path is not configured")
 
 type assetSyncPayload struct {
 	Path          string `json:"path"`
 	ContentBase64 string `json:"content_base64"`
 }
 
-// normalizeAssetPath returns a path relative to assets.upload.storage_path
-// (e.g. images/foo.svg, fonts/foo.woff2).
+// normalizeAssetPath returns a safe path relative to assets.path (e.g. images/foo.svg).
 func (s *Server) normalizeAssetPath(raw string) (string, error) {
 	p := strings.TrimSpace(raw)
 	p = strings.ReplaceAll(p, "\\", "/")
@@ -33,30 +32,8 @@ func (s *Server) normalizeAssetPath(raw string) (string, error) {
 		p = strings.TrimPrefix(p, "assets/")
 	}
 	p = path.Clean(p)
-	if p == "." || p == ".." || strings.HasPrefix(p, "../") || strings.Contains(p, "..") {
+	if p == "" || p == "." || p == ".." || strings.HasPrefix(p, "../") || strings.Contains(p, "..") {
 		return "", fmt.Errorf("invalid asset path")
-	}
-
-	allowed := s.config.Assets.AllowedPrefixes
-	if len(allowed) == 0 {
-		allowed = []string{"images/", "fonts/", "downloads/", "css/"}
-	}
-	ok := false
-	for _, pref := range allowed {
-		pref = strings.TrimSpace(pref)
-		if pref == "" {
-			continue
-		}
-		if !strings.HasSuffix(pref, "/") {
-			pref += "/"
-		}
-		if strings.HasPrefix(p, pref) {
-			ok = true
-			break
-		}
-	}
-	if !ok {
-		return "", fmt.Errorf("asset path is not allowed")
 	}
 
 	base := path.Base(p)
@@ -120,21 +97,19 @@ func (s *Server) handleSyncAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists := false
-	if s.uploader != nil {
-		if ok, err := s.uploader.Exists(rel); err == nil && ok {
-			exists = true
-		}
+	if s.uploader == nil {
+		writeError(w, 503, "assets.path is not configured on the server")
+		return
 	}
 
-	if s.uploader == nil {
-		writeError(w, 503, "assets upload storage_path is not configured on the server")
-		return
+	exists := false
+	if ok, err := s.uploader.Exists(rel); err == nil && ok {
+		exists = true
 	}
 
 	if err := s.uploader.Upload(rel, data); err != nil {
 		if errors.Is(err, errAssetsNotConfigured) {
-			writeError(w, 503, "assets upload storage_path is not configured on the server")
+			writeError(w, 503, "assets.path is not configured on the server")
 			return
 		}
 		writeError(w, 500, "failed to save asset")
@@ -156,12 +131,12 @@ func (s *Server) handleSyncDeleteAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if s.uploader == nil {
-		writeError(w, 503, "assets upload storage_path is not configured on the server")
+		writeError(w, 503, "assets.path is not configured on the server")
 		return
 	}
 	if err := s.uploader.Delete(rel); err != nil {
 		if errors.Is(err, errAssetsNotConfigured) {
-			writeError(w, 503, "assets upload storage_path is not configured on the server")
+			writeError(w, 503, "assets.path is not configured on the server")
 			return
 		}
 		if os.IsNotExist(err) {

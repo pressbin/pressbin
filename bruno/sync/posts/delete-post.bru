@@ -1,0 +1,17 @@
+meta {
+  name: Delete Post
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{baseUrl}}/api/sync/{{postSlug}}
+  body: none
+  auth: inherit
+}
+
+docs {
+  Remove a post by slug (same as GitHub `delete.py`).
+
+  Response: `{ "status": "ok", "slug": "...", "action": "deleted" }`
+}

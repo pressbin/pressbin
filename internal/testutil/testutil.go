@@ -68,7 +68,7 @@ func MustAdminKey(t *testing.T, st *store.Store) string {
 	if raw != "" {
 		return raw
 	}
-	return insertKey(t, st, "pb_admin_", []string{"*"})
+	return insertKey(t, st, "pb_admin_", []string{"admin"})
 }
 
 // MustSyncKey creates a sync API key and returns the raw secret.

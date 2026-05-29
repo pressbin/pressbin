@@ -3,27 +3,53 @@
 Single-binary blog engine (**Go + SQLite + Markdown**) living in
 `pressbin_api/`.
 
-## Quick start (local)
+## Install (user, no root)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/pressbin/pressbin/main/scripts/install.sh | bash -s -- \
+  --site-url https://blog.example.com
+```
+
+Installs to `~/.pressbin/` (binary, config, database, assets, `admin.key`, `sync.key`), then run:
+
+```bash
+export PATH="$HOME/.pressbin/bin:$PATH"
+pressbin serve
+```
+
+- **Admin key** (`admin.key`): manage posts/settings and create keys via `/api/admin/*`. Cannot sync.
+- **Sync key** (`sync.key`): GitHub Actions / `POST /api/sync*`. Cannot access admin APIs.
+
+## Quick start (local dev, monorepo)
+
+Dev data lives only in **`.pressbin-dev/`** — same layout as consumer `~/.pressbin/`:
+
+```text
+.pressbin-dev/
+  config.yml
+  data/pressbin.db
+  assets/
+  admin.key
+  sync.key
+```
 
 ```bash
 cd pressbin_api
-go mod tidy
-make migrate
-make run
+make setup-dev    # once (or make reset-dev to wipe)
+make dev          # Air → http://127.0.0.1:8080
+make keys         # print Bruno adminKey / syncKey
 ```
 
-Then open `http://localhost:8080/`.
+The API repo no longer uses `config.yml` or `pressbin.db` in the project root. Sync posts/assets into `.pressbin-dev` via Bruno or the blog repo’s GitHub Action pointed at your local server.
 
 ## Live reload (Air)
 
 ```bash
-cd pressbin_api
 make install-air   # one-time
 make dev
 ```
 
-Air watches Go code, `assets/style.css`, and `config.yml` (embedded assets are
-rebuilt automatically).
+Air runs `pressbin serve --config .pressbin-dev/config.yml`.
 
 ## Configuration
 
@@ -40,20 +66,21 @@ systemd unit, or container.
 | `PRESSBIN_SITE_DESCRIPTION` | Site description |
 | `PRESSBIN_SITE_URL` | Public URL (RSS, etc.) |
 | `PRESSBIN_SITE_POSTS_PER_PAGE` | Posts per index page |
-| `PRESSBIN_ASSETS_UPLOAD_DRIVER` | Asset upload driver (default `local`) |
-| `PRESSBIN_ASSETS_STORAGE_PATH` | Writable dir for synced assets (e.g. `~/public_html/assets`) |
+| `PRESSBIN_ASSETS_PATH` | Blog assets directory (upload + serve at `/assets/*`) |
 | `PRESSBIN_LOG_LEVEL` | `debug`, `info`, `warn`, `error` |
 
-Local dev: copy `config.yml.example` to `config.yml` (included in this repo for the monorepo).
+Local dev: use `make setup-dev` (not `config.yml` in the repo root). See `config.yml.example` for production layout reference.
+
+CLI: `pressbin setup`, `pressbin check`, `pressbin serve` (default), `pressbin version`.
 
 Production example (no config file):
 
 ```bash
-export PRESSBIN_DATABASE_PATH=/var/lib/pressbin/pressbin.db
-export PRESSBIN_ASSETS_STORAGE_PATH=/var/lib/pressbin/assets
+export PRESSBIN_DATABASE_PATH=/var/lib/pressbin/data/pressbin.db
+export PRESSBIN_ASSETS_PATH=/var/lib/pressbin/assets
 export PRESSBIN_SITE_URL=https://blog.example.com
-export PRESSBIN_SITE_TITLE="My Blog"
-./pressbin
+pressbin setup --site-url "$PRESSBIN_SITE_URL" --home /var/lib/pressbin
+pressbin serve
 ```
 
 Relative paths in YAML are resolved from the **config file’s directory**; without a
@@ -67,7 +94,7 @@ Migrations are embedded in the binary and are applied automatically on startup.
 SQL files live in `pressbin_api/internal/store/migrations/`. Posts are not seeded in
 the database — sync them from your GitHub content repo so the DB stays 1:1 with Git.
 Images sync via `POST /api/sync/asset` (same GitHub Action as posts). Set a writable
-`PRESSBIN_ASSETS_STORAGE_PATH` (recommended) or `assets.upload.storage_path` in config.
+`PRESSBIN_ASSETS_PATH` (recommended) or `assets.path` in config. Must not be the binary or database directory.
 
 Run migrations without starting the server:
 

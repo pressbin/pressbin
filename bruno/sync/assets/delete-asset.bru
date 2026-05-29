@@ -1,0 +1,17 @@
+meta {
+  name: Delete Asset
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{baseUrl}}/api/sync/asset/{{assetPath}}
+  body: none
+  auth: inherit
+}
+
+docs {
+  Delete an asset by relative path, e.g. `DELETE /api/sync/asset/images/logo.svg`.
+
+  Response: `{ "status": "ok", "path": "...", "action": "deleted" }`
+}

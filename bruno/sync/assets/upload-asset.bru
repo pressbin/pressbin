@@ -1,0 +1,31 @@
+meta {
+  name: Upload Asset (JSON)
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/sync/asset
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "path": "{{assetPath}}",
+    "content_base64": "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgZmlsbD0iIzMzNzVkYyIvPjx0ZXh0IHg9IjUwIiB5PSI1NSIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5UZXN0PC90ZXh0Pjwvc3ZnPg=="
+  }
+}
+
+docs {
+  Upload an asset using JSON + base64 (same format as the GitHub Action `push_asset.py` script).
+  
+  - `path`: relative path under the assets root, e.g. `images/logo.svg` (no leading `assets/`)
+  - `content_base64`: file bytes encoded as standard base64
+  
+  Response: `{ "status": "ok", "path": "...", "action": "created" | "updated" }`
+}

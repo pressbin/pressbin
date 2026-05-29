@@ -3,10 +3,10 @@ package config
 import (
 	"fmt"
 	"log/slog"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
-	"net/url"
 
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/env/v2"
@@ -26,9 +26,7 @@ var envToConfigKey = map[string]string{
 	"SITE_URL":             "site.url",
 	"SITE_POSTS_PER_PAGE":  "site.posts_per_page",
 	"THEME_CUSTOM_CSS_URL": "theme.custom_css_url",
-	// New asset upload configuration.
-	"ASSETS_UPLOAD_DRIVER": "assets.upload.driver",
-	"ASSETS_STORAGE_PATH":  "assets.upload.storage_path",
+	"ASSETS_PATH":          "assets.path",
 	"LOG_LEVEL":            "log.level",
 }
 
@@ -64,15 +62,8 @@ type ThemeConfig struct {
 }
 
 type AssetsConfig struct {
-	Upload AssetsUploadConfig `koanf:"upload"`
-	// AllowedPrefixes controls which subfolders can be uploaded via /api/sync/asset.
-	// Defaults to ["images/", "fonts/", "downloads/", "css/"].
-	AllowedPrefixes []string `koanf:"allowed_prefixes"`
-}
-
-type AssetsUploadConfig struct {
-	Driver      string `koanf:"driver"`       // local (v1). Future: scp, s3, r2, ftp.
-	StoragePath string `koanf:"storage_path"` // root dir where assets are written
+	// Path is the directory for synced blog assets (upload + HTTP /assets/*).
+	Path string `koanf:"path"`
 }
 
 type LogConfig struct {
@@ -114,7 +105,11 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	cfg.Database.Path = resolveAgainstDir(configDir, cfg.Database.Path)
-	cfg.Assets.Upload.StoragePath = resolveAgainstDir(configDir, cfg.Assets.Upload.StoragePath)
+	cfg.Assets.Path = resolveAgainstDir(configDir, cfg.Assets.Path)
+
+	if err := validatePaths(&cfg); err != nil {
+		return nil, err
+	}
 
 	return &cfg, nil
 }
@@ -159,12 +154,6 @@ func applyDefaults(cfg *Config) {
 	}
 	if cfg.Site.PostsPerPage == 0 {
 		cfg.Site.PostsPerPage = 10
-	}
-	if strings.TrimSpace(cfg.Assets.Upload.Driver) == "" {
-		cfg.Assets.Upload.Driver = "local"
-	}
-	if len(cfg.Assets.AllowedPrefixes) == 0 {
-		cfg.Assets.AllowedPrefixes = []string{"images/", "fonts/", "downloads/", "css/"}
 	}
 	if cfg.Log.Level == "" {
 		cfg.Log.Level = "info"

@@ -1,0 +1,12 @@
+meta {
+  name: sync
+}
+
+headers {
+  Authorization: Bearer {{syncKey}}
+}
+
+docs {
+  Content sync APIs. Requires a `pb_sync_...` key with `posts:write` permission.
+  Create one via **admin → keys → Create Sync Key**, then set `syncKey` in your environment.
+}

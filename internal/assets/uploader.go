@@ -20,7 +20,7 @@ type LocalUploader struct {
 func NewLocalUploader(storagePath string) (*LocalUploader, error) {
 	storagePath = strings.TrimSpace(storagePath)
 	if storagePath == "" {
-		return nil, fmt.Errorf("assets storage path is not configured")
+		return nil, fmt.Errorf("assets.path is not configured")
 	}
 	return &LocalUploader{StoragePath: storagePath}, nil
 }

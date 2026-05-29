@@ -1,7 +1,17 @@
 # Pressbin Configuration (optional)
 #
 # Use config.yml and/or PRESSBIN_* environment variables. Env vars win when both are set.
-# Copy to config.yml for local dev, or run env-only in production (no file required).
+#
+# Recommended user install (no root):
+#   curl -fsSL https://raw.githubusercontent.com/pressbin/pressbin/main/scripts/install.sh | bash -s -- --site-url https://blog.example.com
+#
+# That creates ~/.pressbin/:
+#   bin/pressbin          binary
+#   config.yml            this file
+#   data/pressbin.db      database
+#   assets/               blog static files (/assets/*)
+#   admin.key             admin API key (cannot sync)
+#   sync.key              GitHub sync key (cannot access admin API)
 #
 # Environment variables:
 #   PRESSBIN_SERVER_PORT          server.port
@@ -11,63 +21,26 @@
 #   PRESSBIN_SITE_DESCRIPTION     site.description
 #   PRESSBIN_SITE_URL             site.url
 #   PRESSBIN_SITE_POSTS_PER_PAGE  site.posts_per_page
-#   PRESSBIN_ASSETS_UPLOAD_DRIVER assets.upload.driver
-#   PRESSBIN_ASSETS_STORAGE_PATH  assets.upload.storage_path
+#   PRESSBIN_ASSETS_PATH          assets.path
 #   PRESSBIN_LOG_LEVEL            log.level
 
-# ── Server ─────────────────────────────────────────────────────────
 server:
-  port: 8080          # Port to listen on
-  host: 0.0.0.0       # Bind address. Use 127.0.0.1 if behind nginx.
+  port: 8080
+  host: 127.0.0.1
 
-# ── Database ───────────────────────────────────────────────────────
 database:
-  path: ./pressbin.db  # SQLite file path. Back this file up regularly.
+  path: ./data/pressbin.db
 
-# ── Site ───────────────────────────────────────────────────────────
-# These values are copied into the database on every server start (restart
-# after editing config.yml). Posts are not stored here — sync from GitHub.
 site:
   title: "My Blog"
   description: "Writing about things."
-  url: "https://yourdomain.com"   # No trailing slash. Used for RSS feed.
+  url: "https://yourdomain.com"
   posts_per_page: 10
 
-# ── Assets upload (v1) ───────────────────────────────────────────────
-# Where incoming asset files are written on disk via POST /api/sync/asset.
-# This is independent of where the pressbin binary lives.
-#
-# Recommended authoring convention in Markdown:
-# - Use full URLs (https://...) or root-absolute paths (/assets/images/x.png).
-# - Avoid relative paths like assets/images/x.png (browser resolves under /p/...).
+# Blog assets: synced via API, served at /assets/*
+# Must not be the binary or database directory.
 assets:
-  upload:
-    driver: local
-    storage_path: ""    # e.g. /home/user/public_html/assets
+  path: ./assets
 
-  # Allowed prefixes for uploaded asset paths (after stripping leading "assets/").
-  # Example: "assets/images/hero.png" -> "images/hero.png" on disk.
-  allowed_prefixes: ["images/", "fonts/", "downloads/", "css/"]
-
-# ── Comments (optional) ────────────────────────────────────────────
-# comments:
-#   provider: none        # none | giscus | utterances
-#   # If giscus:
-#   # repo: "yourname/yourrepo"
-#   # repo_id: "R_..."
-#   # category_id: "DIC_..."
-
-# ── Analytics (optional) ───────────────────────────────────────────
-# analytics:
-#   provider: none        # none | plausible | umami
-#   # domain: "yourdomain.com"
-#   # script_url: "https://plausible.io/js/script.js"
-
-# ── Theme (optional) ─────────────────────────────────────────────────
-# theme:
-#   custom_css: ""        # e.g. ./assets/custom.css
-#   templates_dir: ""     # e.g. ./templates/
-
-# ── Log ────────────────────────────────────────────────────────────
 log:
-  level: info           # debug | info | warn | error
+  level: info

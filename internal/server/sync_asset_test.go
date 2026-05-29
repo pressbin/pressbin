@@ -15,8 +15,7 @@ import (
 func TestSyncAsset_createUpdateDelete(t *testing.T) {
 	root := t.TempDir()
 	cfg := testutil.TestConfig()
-	cfg.Assets.Upload.Driver = "local"
-	cfg.Assets.Upload.StoragePath = root
+	cfg.Assets.Path = root
 
 	st := testutil.NewStore(t)
 	key := testutil.MustSyncKey(t, st)
@@ -77,8 +76,7 @@ func TestSyncAsset_requiresStoragePath(t *testing.T) {
 func TestSyncAsset_rejectsTraversal(t *testing.T) {
 	root := t.TempDir()
 	cfg := testutil.TestConfig()
-	cfg.Assets.Upload.Driver = "local"
-	cfg.Assets.Upload.StoragePath = root
+	cfg.Assets.Path = root
 	st := testutil.NewStore(t)
 	key := testutil.MustSyncKey(t, st)
 	h := server.New(st, cfg, testutil.TestAssets()).Handler()
@@ -96,8 +94,7 @@ func TestSyncAsset_rejectsTraversal(t *testing.T) {
 func TestSyncAsset_allowsFontsPrefix(t *testing.T) {
 	root := t.TempDir()
 	cfg := testutil.TestConfig()
-	cfg.Assets.Upload.Driver = "local"
-	cfg.Assets.Upload.StoragePath = root
+	cfg.Assets.Path = root
 
 	st := testutil.NewStore(t)
 	key := testutil.MustSyncKey(t, st)

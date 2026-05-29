@@ -87,7 +87,7 @@ func TestBlog_draftNotPublic(t *testing.T) {
 
 func TestBlog_assets(t *testing.T) {
 	h := testutil.NewServer(t, testutil.NewStore(t)).Handler()
-	w := testutil.DoRequest(t, h, http.MethodGet, "/assets/style.css", nil, "")
+	w := testutil.DoRequest(t, h, http.MethodGet, "/theme/style.css", nil, "")
 	if w.Code != http.StatusOK {
 		t.Fatalf("assets status=%d", w.Code)
 	}
@@ -103,8 +103,7 @@ func TestBlog_contentStaticImages(t *testing.T) {
 		t.Fatal(err)
 	}
 	cfg := testutil.TestConfig()
-	cfg.Assets.Upload.Driver = "local"
-	cfg.Assets.Upload.StoragePath = root
+	cfg.Assets.Path = root
 	st := testutil.NewStore(t)
 	h := server.New(st, cfg, testutil.TestAssets()).Handler()
 	w := testutil.DoRequest(t, h, http.MethodGet, "/assets/images/test.svg", nil, "")

@@ -1,0 +1,36 @@
+meta {
+  name: Sync Post
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/sync
+  body: json
+  auth: inherit
+}
+
+headers {
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "slug": "{{postSlug}}",
+    "title": "My First Post",
+    "date": "2026-05-01T12:00:00Z",
+    "tags": ["pressbin", "sample"],
+    "summary": "Synced via Bruno (same payload as push.py).",
+    "content": "---\ntitle: My First  Post\ndate: 2026-05-01\ntags: [pressbin, sample]\nsummary: Synced via Bruno\n---\n\n# My First ![Ghost admin path vs Pressbin Git sync path](/assets/images/bruno-test.svg)Post\n\nHello from the sync API.\n",
+    "status": "published"
+  }
+}
+
+docs {
+  Create or update a post (same contract as GitHub `push.py`).
+  
+  Required: `slug`, `content` (full markdown including front matter).
+  Optional: `title`, `date`, `tags`, `summary`, `status`.
+  
+  Response: `{ "status": "ok", "slug": "...", "action": "created" | "updated" }`
+}

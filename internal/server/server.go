@@ -18,25 +18,25 @@ import (
 )
 
 type Server struct {
-	store  *store.Store
-	config *config.Config
-	router chi.Router
-	assets fs.FS
+	store    *store.Store
+	config   *config.Config
+	router   chi.Router
+	assets   fs.FS
 	uploader assetsupload.Uploader
 }
 
-func New(st *store.Store, cfg *config.Config, assets fs.FS) *Server {
+func New(st *store.Store, cfg *config.Config, themeFS fs.FS) *Server {
 	var uploader assetsupload.Uploader
-	if strings.TrimSpace(cfg.Assets.Upload.StoragePath) != "" {
-		if strings.TrimSpace(cfg.Assets.Upload.Driver) == "" || cfg.Assets.Upload.Driver == "local" {
-			u, err := assetsupload.NewLocalUploader(cfg.Assets.Upload.StoragePath)
-			if err == nil {
-				uploader = u
-			}
+	if dir := strings.TrimSpace(cfg.Assets.Path); dir != "" {
+		u, err := assetsupload.NewLocalUploader(dir)
+		if err == nil {
+			uploader = u
+		} else {
+			slog.Warn("assets.path uploader", "path", dir, "err", err)
 		}
 	}
 
-	s := &Server{store: st, config: cfg, assets: assets, uploader: uploader}
+	s := &Server{store: st, config: cfg, assets: themeFS, uploader: uploader}
 	s.router = chi.NewRouter()
 	s.routes()
 	return s
@@ -49,27 +49,24 @@ func (s *Server) routes() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Compress(5))
 
-	// Optional: serve synced content assets directly from the Pressbin binary.
-	// In production you may prefer nginx/apache to serve these files.
-	if dir := strings.TrimSpace(s.config.Assets.Upload.StoragePath); dir != "" {
-		if st, err := os.Stat(dir); err != nil {
-			slog.Warn("assets.upload.storage_path not readable", "path", dir, "err", err)
+	if dir := strings.TrimSpace(s.config.Assets.Path); dir != "" {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			slog.Warn("assets.path not writable", "path", dir, "err", err)
+		} else if st, err := os.Stat(dir); err != nil {
+			slog.Warn("assets.path not readable", "path", dir, "err", err)
 		} else if !st.IsDir() {
-			slog.Warn("assets.upload.storage_path is not a directory", "path", dir)
+			slog.Warn("assets.path is not a directory", "path", dir)
 		} else {
-			// NOTE: this only exposes /assets/images/* (not /assets/fonts/* etc) to avoid
-			// colliding with the embedded /assets/* routes used by the Pressbin UI/theme.
-			slog.Info("serving content image files", "path", dir, "url_prefix", "/assets/images/")
-			r.Handle("/assets/images/*", http.StripPrefix("/assets/", http.FileServer(http.Dir(dir))))
+			slog.Info("serving blog assets", "path", dir, "url", "/assets/")
+			r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir(dir))))
 		}
 	}
 
-	sub, err := fs.Sub(s.assets, "assets")
-	if err != nil {
-		slog.Error("assets sub fs", "err", err)
-		sub = s.assets
+	if sub, err := fs.Sub(s.assets, "assets"); err == nil {
+		r.Handle("/theme/*", http.StripPrefix("/theme/", http.FileServer(http.FS(sub))))
+	} else {
+		slog.Error("theme assets", "err", err)
 	}
-	r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.FS(sub))))
 
 	r.Get("/", s.handleIndex)
 	r.Get("/p/{slug}", s.handlePost)
@@ -87,7 +84,7 @@ func (s *Server) routes() {
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(s.requireAuth("*"))
+		r.Use(s.requireAuth("admin"))
 		r.Get("/api/admin/posts", s.handleAdminListPosts)
 		r.Get("/api/admin/posts/{slug}", s.handleAdminGetPost)
 		r.Put("/api/admin/posts/{slug}", s.handleAdminUpdatePost)

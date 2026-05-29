@@ -1,23 +1,55 @@
 # Pressbin — Quick Start
 
-1. Copy config.yml.example to config.yml **or** set PRESSBIN_* env vars (see README). Env overrides YAML.
+## Install (recommended)
 
-2. Run:
+```bash
+curl -fsSL https://raw.githubusercontent.com/pressbin/pressbin/main/scripts/install.sh | bash -s -- \
+  --site-url https://your-domain.com
+export PATH="$HOME/.pressbin/bin:$PATH"
+pressbin serve
+```
 
-   chmod +x pressbin ./pressbin --config config.yml
+Everything lives under `~/.pressbin/`:
 
-3. On first run, copy the admin key (pb_admin_...) printed in the terminal. It
-   is shown once.
+| Path | Purpose |
+|------|---------|
+| `bin/pressbin` | Binary |
+| `config.yml` | Configuration |
+| `data/pressbin.db` | SQLite database |
+| `assets/` | Synced images/files (served at `/assets/*`) |
+| `admin.key` | Admin API key (`pb_admin_…`) — manage site, create keys |
+| `sync.key` | Sync API key (`pb_sync_…`) — GitHub Actions publishing |
 
-4. Open http://localhost:8080/ (or your configured port).
+**Admin cannot sync. Sync cannot access admin APIs.**
 
-5. Publish from Git: copy .github/ from this folder into your blog repo, then
-   add GitHub secrets PRESSBIN_URL and PRESSBIN_KEY (create a sync key via POST
-   /api/admin/keys with your admin key).
+## Manual install
 
-Upgrade: download the new binary for your platform, stop the service, replace
-the pressbin file, start again. Your pressbin.db is unchanged.
+1. Download `pressbin-linux-amd64` (or your platform) from [GitHub Releases](https://github.com/pressbin/pressbin/releases).
+2. Verify with `checksums.txt` from the same release.
+3. `chmod +x pressbin` and move to `~/.pressbin/bin/pressbin`.
+4. Run: `pressbin setup --site-url https://your-domain.com`
+5. `pressbin serve`
 
-Verify version: ./pressbin version
+## Git publishing
+
+Copy `.github/` from the [blog template](https://github.com/pressbin/pressbin-blog-template) into your content repo.
+
+GitHub secrets:
+
+| Secret | Value |
+|--------|--------|
+| `PRESSBIN_URL` | Your public site URL |
+| `PRESSBIN_KEY` | Contents of `~/.pressbin/sync.key` |
+
+## Commands
+
+```bash
+pressbin setup --site-url URL   # first-time setup
+pressbin check                  # preflight validation
+pressbin serve                  # run server
+pressbin version
+```
+
+Upgrade: replace `~/.pressbin/bin/pressbin`, run `pressbin check`, then `pressbin serve`. Database and assets are unchanged.
 
 Docs: https://pressbin.dev/docs

@@ -4,7 +4,7 @@ tmp_dir = "tmp"
 [build]
   bin = "./tmp/main"
   cmd = "go build -o ./tmp/main ."
-  args_bin = ["--config", "config.yml"]
+  args_bin = ["serve", "--config", ".pressbin-dev/config.yml"]
   delay = 1000
   exclude_dir = ["tmp", "vendor", ".git", "bin"]
   exclude_regex = ["_test\\.go"]

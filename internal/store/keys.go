@@ -25,7 +25,7 @@ type APIKey struct {
 
 func (k APIKey) HasPermission(required string) bool {
 	for _, p := range k.Permissions {
-		if p == "*" || p == required {
+		if p == required {
 			return true
 		}
 	}
@@ -38,6 +38,7 @@ func (s *Store) countKeys() (int, error) {
 	return n, err
 }
 
+// Bootstrap creates the default admin key when no keys exist (legacy/dev).
 func (s *Store) Bootstrap() (string, error) {
 	n, err := s.countKeys()
 	if err != nil {
@@ -46,24 +47,41 @@ func (s *Store) Bootstrap() (string, error) {
 	if n > 0 {
 		return "", nil
 	}
+	return s.CreateAdminKey("default admin")
+}
 
-	raw := "pb_admin_" + RandomKeySuffix(32)
+func (s *Store) HasKeysWithPrefix(prefix string) (bool, error) {
+	keys, err := s.getKeysByPrefix(prefix)
+	if err != nil {
+		return false, err
+	}
+	return len(keys) > 0, nil
+}
+
+func (s *Store) CreateAdminKey(label string) (string, error) {
+	return s.createKey("pb_admin_", label, []string{"admin"})
+}
+
+func (s *Store) CreateSyncKey(label string) (string, error) {
+	return s.createKey("pb_sync_", label, []string{"posts:write"})
+}
+
+func (s *Store) createKey(prefix, label string, perms []string) (string, error) {
+	raw := prefix + RandomKeySuffix(32)
 	hash, err := bcrypt.GenerateFromPassword([]byte(raw), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
 	}
-
 	idGen, err := nanoid.Standard(21)
 	if err != nil {
 		return "", err
 	}
-
 	if err := s.CreateKey(APIKey{
 		ID:          idGen(),
-		Label:       "default admin",
-		Prefix:      "pb_admin_",
+		Label:       label,
+		Prefix:      prefix,
 		Hash:        string(hash),
-		Permissions: []string{"*"},
+		Permissions: perms,
 		CreatedAt:   time.Now().UTC(),
 	}); err != nil {
 		return "", err
@@ -227,7 +245,7 @@ func KeyPrefixForType(keyType string) (prefix string, perms []string, err error)
 	case "sync":
 		return "pb_sync_", []string{"posts:write"}, nil
 	case "admin":
-		return "pb_admin_", []string{"*"}, nil
+		return "pb_admin_", []string{"admin"}, nil
 	default:
 		return "", nil, fmt.Errorf("type must be sync or admin")
 	}

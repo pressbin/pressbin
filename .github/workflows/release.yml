@@ -102,7 +102,15 @@ jobs:
             | Mac Apple Silicon | `pressbin-darwin-arm64` |
             | Windows | `pressbin-windows-amd64.exe` |
 
-            Copy [config.yml.example](https://github.com/${{ github.repository }}/blob/main/config.yml.example) to `config.yml`, then run `./pressbin --config config.yml`.
+            ### Install (no root)
+            ```bash
+            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/scripts/install.sh | bash -s -- \
+              --site-url https://your-domain.com
+            export PATH="$HOME/.pressbin/bin:$PATH"
+            pressbin serve
+            ```
+
+            Keys: `~/.pressbin/admin.key` (admin API), `~/.pressbin/sync.key` (GitHub Actions).
 
             For git-push publishing, use the [blog content template](https://github.com/pressbin/pressbin-blog-template).
 
