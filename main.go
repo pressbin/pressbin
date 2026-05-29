@@ -51,7 +51,7 @@ Usage:
   pressbin check [--config path]
   pressbin version
 
-Default config: .pressbin-dev/config.yml, then ~/.pressbin/config.yml, then ./config.yml
+Default config: next to the binary (…/config.yml from setup --home), .pressbin-dev, ~/.pressbin, or ./config.yml
 `, Version)
 }
 

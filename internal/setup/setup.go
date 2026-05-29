@@ -178,7 +178,7 @@ Pressbin is ready.
 Start the server:
   %s serve
 
-Or add to PATH:
+Or add to PATH (serve loads config next to the binary):
   export PATH=%s/bin:$PATH
   pressbin serve
 

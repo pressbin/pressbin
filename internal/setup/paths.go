@@ -4,24 +4,68 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // ConfigPath resolves the default config file for serve/check.
-// Order: ./.pressbin-dev/config.yml (monorepo dev), ~/.pressbin/config.yml, ./config.yml.
+//
+// Order:
+//  1. ../config.yml relative to the pressbin binary (…/bin/pressbin → …/config.yml)
+//     This is where `pressbin setup --home DIR` writes config.yml.
+//  2. ./.pressbin-dev/config.yml (monorepo dev)
+//  3. ~/.pressbin/config.yml
+//  4. ./config.yml
 func ConfigPath() string {
+	if p := configFromExecutable(); p != "" {
+		return p
+	}
 	if home, err := LocalDevHome(); err == nil {
-		p := filepath.Join(home, "config.yml")
-		if _, err := os.Stat(p); err == nil {
+		if p := configInHome(home); p != "" {
 			return p
 		}
 	}
 	if home, err := DefaultHome(); err == nil {
-		p := Paths(home).Config
-		if _, err := os.Stat(p); err == nil {
+		if p := configInHome(home); p != "" {
 			return p
 		}
 	}
 	return "config.yml"
+}
+
+func configInHome(home string) string {
+	home = strings.TrimSpace(home)
+	if home == "" {
+		return ""
+	}
+	p := Paths(home).Config
+	if _, err := os.Stat(p); err == nil {
+		return p
+	}
+	return ""
+}
+
+func configFromExecutable() string {
+	exe, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return ConfigPathForExecutable(exe)
+}
+
+// ConfigPathForExecutable returns …/config.yml when exe lives in …/bin/pressbin (for tests).
+func ConfigPathForExecutable(exe string) string {
+	exe, err := filepath.EvalSymlinks(exe)
+	if err != nil {
+		return ""
+	}
+	if filepath.Base(exe) != "pressbin" {
+		return ""
+	}
+	binDir := filepath.Dir(exe)
+	if filepath.Base(binDir) != "bin" {
+		return ""
+	}
+	return configInHome(filepath.Dir(binDir))
 }
 
 const (

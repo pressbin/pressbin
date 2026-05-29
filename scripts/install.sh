@@ -3,7 +3,7 @@
 set -euo pipefail
 
 REPO="pressbin/pressbin"
-INSTALL_DIR="${PRESSBIN_HOME:-$HOME/.pressbin}"
+INSTALL_DIR="$HOME/.pressbin"
 SITE_URL="${PRESSBIN_SITE_URL:-}"
 SITE_TITLE="${PRESSBIN_SITE_TITLE:-My Blog}"
 
@@ -16,8 +16,7 @@ Usage: install.sh --site-url URL [options]
   --home DIR         Install directory (default: ~/.pressbin)
 
 Environment:
-  PRESSBIN_HOME      Install directory
-  PRESSBIN_SITE_URL  Public site URL
+  PRESSBIN_SITE_URL  Public site URL (alternative to --site-url)
 
 Example:
   curl -fsSL https://raw.githubusercontent.com/pressbin/pressbin/main/scripts/install.sh | bash -s -- --site-url https://blog.example.com
@@ -87,5 +86,5 @@ echo "Running setup..."
   --site-title "${SITE_TITLE}"
 
 echo ""
-echo "Add Pressbin to your PATH:"
+echo "Add Pressbin to your PATH (serve loads ${INSTALL_DIR}/config.yml from the binary path):"
 echo "  export PATH=\"${INSTALL_DIR}/bin:\$PATH\""
