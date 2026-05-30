@@ -1,4 +1,4 @@
-.PHONY: help dev run setup-dev reset-dev check keys migrate build release release-bundle clean tidy vet test install-air
+.PHONY: help dev run setup-dev reset-dev check keys migrate seed-dev seed-dev-clear build release release-bundle clean tidy vet test install-air
 
 # Monorepo dev home — same layout as ~/.pressbin on consumer machines.
 DEV_HOME     ?= $(CURDIR)/.pressbin-dev
@@ -42,6 +42,14 @@ keys: ## Print Bruno env hints (adminKey / syncKey from key files)
 migrate: ## Apply migrations to .pressbin-dev database
 	@test -f "$(DEV_CONFIG)" || { echo "Run: make setup-dev"; exit 1; }
 	go run ./cmd/migrate --config "$(DEV_CONFIG)"
+
+seed-dev: ## Insert ~55 synthetic posts into .pressbin-dev for load testing
+	@test -f "$(DEV_CONFIG)" || { echo "Run: make setup-dev"; exit 1; }
+	go run ./cmd/seed --config "$(DEV_CONFIG)" --count 55
+
+seed-dev-clear: ## Remove load-test-* posts and re-seed .pressbin-dev
+	@test -f "$(DEV_CONFIG)" || { echo "Run: make setup-dev"; exit 1; }
+	go run ./cmd/seed --config "$(DEV_CONFIG)" --count 55 --clear
 
 build: ## Build production binary to ./bin/pressbin
 	@mkdir -p bin
