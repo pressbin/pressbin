@@ -1,6 +1,8 @@
 package render
 
 import (
+	"fmt"
+
 	g "maragu.dev/gomponents"
 	h "maragu.dev/gomponents/html"
 
@@ -8,18 +10,30 @@ import (
 )
 
 func SearchResults(posts []store.Post, query string) g.Node {
-	if query == "" {
-		return g.Group(nil)
-	}
-	if len(posts) == 0 {
+	n := len(posts)
+	if n == 0 {
 		return h.Div(
-			h.Class("pb-search-empty"),
-			h.P(h.Class("pb-muted"), g.Text("No results for \""+query+"\".")),
+			h.Class("pb-search-panel"),
+			searchHeader(query, 0),
+			h.P(h.Class("pb-muted"), g.Text("Try a different word or check the spelling.")),
 		)
 	}
 	return h.Div(
-		h.Class("pb-search-results"),
-		h.P(h.Class("pb-muted pb-text-sm"), g.Text("Results for \""+query+"\"")),
+		h.Class("pb-search-panel"),
+		searchHeader(query, n),
 		postList(posts, true),
 	)
+}
+
+func searchHeader(query string, count int) g.Node {
+	var label string
+	switch count {
+	case 0:
+		label = fmt.Sprintf("No results for %q", query)
+	case 1:
+		label = fmt.Sprintf("1 result for %q", query)
+	default:
+		label = fmt.Sprintf("%d results for %q", count, query)
+	}
+	return h.P(h.Class("pb-search-header"), g.Text(label))
 }

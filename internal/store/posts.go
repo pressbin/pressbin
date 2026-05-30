@@ -218,9 +218,28 @@ func (s *Store) SetPostStatus(slug, status string) error {
 	return nil
 }
 
+// buildFTSQuery turns user input into an FTS5 prefix query so partial terms
+// like "po" match "post" as the user types.
+func buildFTSQuery(query string) string {
+	terms := strings.Fields(strings.TrimSpace(query))
+	if len(terms) == 0 {
+		return ""
+	}
+	parts := make([]string, 0, len(terms))
+	for _, term := range terms {
+		term = strings.TrimSuffix(term, "*")
+		if term == "" {
+			continue
+		}
+		term = strings.ReplaceAll(term, `"`, `""`)
+		parts = append(parts, `"`+term+`"*`)
+	}
+	return strings.Join(parts, " ")
+}
+
 func (s *Store) SearchPosts(query string) ([]Post, error) {
-	q := strings.TrimSpace(query)
-	if q == "" {
+	ftsQuery := buildFTSQuery(query)
+	if ftsQuery == "" {
 		return nil, nil
 	}
 	rows, err := s.db.Query(`
@@ -230,7 +249,7 @@ func (s *Store) SearchPosts(query string) ([]Post, error) {
 		WHERE fts_index MATCH ? AND p.status = 'published'
 		ORDER BY rank
 		LIMIT 50
-	`, q)
+	`, ftsQuery)
 	if err != nil {
 		return nil, err
 	}

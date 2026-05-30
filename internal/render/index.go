@@ -19,10 +19,8 @@ func IndexPage(posts []store.Post, pd PageData, page, totalPages int) g.Node {
 				// Avoid repeating the site title (navbar already shows it).
 				g.If(pd.SiteDescription != "", h.P(h.Class("pb-lead"), g.Text(pd.SiteDescription))),
 				searchBox(),
-				h.Div(h.ID("search-results")),
+				postFeed(posts, page, totalPages),
 			),
-			postList(posts, false),
-			pagination("/", page, totalPages),
 		),
 	)
 }
@@ -31,7 +29,7 @@ func searchBox() g.Node {
 	return h.Form(
 		h.Class("pb-search"),
 		hx.Get("/search"),
-		hx.Target("#search-results"),
+		hx.Target("#post-feed"),
 		hx.Trigger("keyup changed delay:300ms from:input[name='q']"),
 		h.Input(
 			h.Type("search"),
@@ -40,6 +38,24 @@ func searchBox() g.Node {
 			h.Placeholder("Search posts..."),
 		),
 	)
+}
+
+func PostFeedFragment(posts []store.Post, page, totalPages int) g.Node {
+	return postFeedInner(posts, page, totalPages)
+}
+
+func postFeed(posts []store.Post, page, totalPages int) g.Node {
+	return h.Div(
+		h.ID("post-feed"),
+		postFeedInner(posts, page, totalPages),
+	)
+}
+
+func postFeedInner(posts []store.Post, page, totalPages int) g.Node {
+	return g.Group([]g.Node{
+		postList(posts, false),
+		pagination("/", page, totalPages),
+	})
 }
 
 func postList(posts []store.Post, compact bool) g.Node {

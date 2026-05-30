@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 
@@ -73,13 +74,23 @@ func (s *Server) handleTag(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleSearch(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query().Get("q")
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if q == "" {
+		page := 1
+		limit := s.limit()
+		posts, total, err := s.store.ListPosts(page, limit)
+		if err != nil {
+			writeError(w, 500, "failed to list posts")
+			return
+		}
+		_ = render.PostFeedFragment(posts, page, totalPages(total, limit)).Render(w)
+		return
+	}
 	posts, err := s.store.SearchPosts(q)
 	if err != nil {
 		writeError(w, 500, "search failed")
 		return
 	}
-	html := render.SearchResults(posts, q)
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_ = html.Render(w)
+	_ = render.SearchResults(posts, q).Render(w)
 }

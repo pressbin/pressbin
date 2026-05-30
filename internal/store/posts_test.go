@@ -194,6 +194,33 @@ func TestSearchPosts_emptyQuery(t *testing.T) {
 	}
 }
 
+func TestSearchPosts_prefix(t *testing.T) {
+	st := openTestStore(t)
+	slug := "prefix-post-" + RandomKeySuffix(8)
+	now := time.Now().UTC()
+	if err := st.UpsertPost(Post{
+		Slug: slug, Title: "My First Post", ContentMD: "hello world", ContentHTML: "<p>hello</p>",
+		Summary: "s", Status: "published", PublishedAt: now, UpdatedAt: now,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	for _, q := range []string{"po", "fir", "my f"} {
+		posts, err := st.SearchPosts(q)
+		if err != nil {
+			t.Fatalf("SearchPosts(%q): %v", q, err)
+		}
+		found := false
+		for _, p := range posts {
+			if p.Slug == slug {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("prefix search %q did not find post %q", q, slug)
+		}
+	}
+}
+
 func TestDeletePost_andPostExists(t *testing.T) {
 	st := openTestStore(t)
 	slug := "delete-me-" + RandomKeySuffix(8)
