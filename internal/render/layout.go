@@ -13,6 +13,8 @@ type PageData struct {
 	SiteURL         string
 	SiteDescription string
 	CustomCSSURL    string
+	// IncludeHTMX loads deferred /theme/htmx.min.js (homepage search only).
+	IncludeHTMX bool
 }
 
 func Layout(title string, pd PageData, content g.Node) g.Node {
@@ -29,11 +31,18 @@ func Layout(title string, pd PageData, content g.Node) g.Node {
 			h.Meta(h.Name("viewport"), h.Content("width=device-width, initial-scale=1")),
 			h.Meta(h.Name("description"), h.Content(pd.SiteDescription)),
 			h.TitleEl(g.Text(fullTitle)),
-			h.Script(h.Src("https://unpkg.com/htmx.org@1.9.12")),
-			h.Link(h.Rel("preconnect"), h.Href("https://fonts.googleapis.com")),
-			h.Link(h.Rel("preconnect"), h.Href("https://fonts.gstatic.com"), h.CrossOrigin("")),
-			h.Link(h.Rel("stylesheet"), h.Href("https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap")),
+			h.StyleEl(g.Raw(criticalCSS)),
+			h.Link(
+				h.Rel("preload"),
+				h.Href("/theme/fonts/dm-sans.woff2"),
+				h.As("font"),
+				h.Type("font/woff2"),
+				h.CrossOrigin("anonymous"),
+			),
 			h.Link(h.Rel("stylesheet"), h.Href("/theme/style.css")),
+			g.If(pd.IncludeHTMX,
+				h.Script(h.Src("/theme/htmx.min.js"), h.Defer()),
+			),
 			g.If(strings.TrimSpace(pd.CustomCSSURL) != "",
 				h.Link(h.Rel("stylesheet"), h.Href(pd.CustomCSSURL)),
 			),

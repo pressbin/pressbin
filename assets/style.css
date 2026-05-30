@@ -1,3 +1,33 @@
+/* Self-hosted fonts (latin subset, OFL — see google/fonts) */
+@font-face {
+  font-family: 'Instrument Serif';
+  font-style: normal;
+  font-weight: 400;
+  font-display: optional;
+  src: url('/theme/fonts/instrument-serif-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/theme/fonts/dm-sans.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'DM Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/theme/fonts/dm-mono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'DM Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/theme/fonts/dm-mono-500.woff2') format('woff2');
+}
+
 /* Pressbin default theme
  *
  * Themes override only :root tokens. The stable token contract is:

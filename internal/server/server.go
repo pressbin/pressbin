@@ -62,12 +62,12 @@ func (s *Server) routes() {
 			slog.Warn("assets.path is not a directory", "path", dir)
 		} else {
 			slog.Info("serving blog assets", "path", dir, "url", "/assets/")
-			r.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.Dir(dir))))
+			r.Handle("/assets/*", staticCache(http.StripPrefix("/assets/", http.FileServer(http.Dir(dir)))))
 		}
 	}
 
 	if sub, err := fs.Sub(s.assets, "assets"); err == nil {
-		r.Handle("/theme/*", http.StripPrefix("/theme/", http.FileServer(http.FS(sub))))
+		r.Handle("/theme/*", staticCache(http.StripPrefix("/theme/", http.FileServer(http.FS(sub)))))
 	} else {
 		slog.Error("theme assets", "err", err)
 	}

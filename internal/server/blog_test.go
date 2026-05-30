@@ -87,9 +87,51 @@ func TestBlog_draftNotPublic(t *testing.T) {
 
 func TestBlog_assets(t *testing.T) {
 	h := testutil.NewServer(t, testutil.NewStore(t)).Handler()
-	w := testutil.DoRequest(t, h, http.MethodGet, "/theme/style.css", nil, "")
+	for _, path := range []string{"/theme/style.css", "/theme/htmx.min.js", "/theme/fonts/dm-sans.woff2"} {
+		w := testutil.DoRequest(t, h, http.MethodGet, path, nil, "")
+		if w.Code != http.StatusOK {
+			t.Fatalf("%s status=%d", path, w.Code)
+		}
+		if cc := w.Header().Get("Cache-Control"); !strings.Contains(cc, "max-age=31536000") {
+			t.Errorf("%s Cache-Control=%q, want long-lived cache", path, cc)
+		}
+	}
+}
+
+func TestBlog_htmxOnlyOnIndex(t *testing.T) {
+	st := testutil.NewStore(t)
+	syncKey := testutil.MustSyncKey(t, st)
+	h := testutil.NewServer(t, st).Handler()
+
+	slug := "htmx-only-" + store.RandomKeySuffix(8)
+	w := testutil.DoRequest(t, h, http.MethodPost, "/api/sync",
+		testutil.SyncJSON(slug, "HTMX Test", ""), syncKey)
 	if w.Code != http.StatusOK {
-		t.Fatalf("assets status=%d", w.Code)
+		t.Fatal(w.Body.String())
+	}
+
+	w = testutil.DoRequest(t, h, http.MethodGet, "/", nil, "")
+	body := w.Body.String()
+	if !strings.Contains(body, "<style>") || !strings.Contains(body, "Georgia, serif") {
+		t.Error("index missing inlined critical CSS")
+	}
+	if !strings.Contains(body, `rel="preload"`) || !strings.Contains(body, "dm-sans.woff2") {
+		t.Error("index missing font preload")
+	}
+	if !strings.Contains(body, `/theme/htmx.min.js`) {
+		t.Error("index missing self-hosted htmx")
+	}
+	if !strings.Contains(body, `defer`) {
+		t.Error("index htmx should be deferred")
+	}
+
+	w = testutil.DoRequest(t, h, http.MethodGet, "/p/"+slug, nil, "")
+	body = w.Body.String()
+	if strings.Contains(body, "htmx") {
+		t.Error("post page should not load htmx")
+	}
+	if strings.Contains(body, "fonts.googleapis.com") || strings.Contains(body, "unpkg.com") {
+		t.Error("post page should not load third-party fonts or scripts")
 	}
 }
 

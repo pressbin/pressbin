@@ -11,6 +11,7 @@ import (
 )
 
 func IndexPage(posts []store.Post, pd PageData, page, totalPages int) g.Node {
+	pd.IncludeHTMX = true
 	return Layout(pd.SiteTitle, pd,
 		h.Div(
 			h.Class("pb-stack pb-stack-lg"),

@@ -1,0 +1,63 @@
+/* Above-the-fold only; uses system fonts so first paint is not blocked on webfonts. */
+:root {
+  --pb-bg: #F7F5F0;
+  --pb-ink: #0D0D0D;
+  --pb-ink-soft: #3D3D3D;
+  --pb-border: #E0DDD5;
+  --pb-wrap: 860px;
+  --pb-gap: clamp(1rem, 4vw, 2rem);
+}
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; }
+.pb-body {
+  min-height: 100vh;
+  font-family: system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.7;
+  background: var(--pb-bg);
+  color: var(--pb-ink);
+}
+.pb-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--pb-bg) 90%, transparent);
+  border-bottom: 1px solid var(--pb-border);
+}
+.pb-nav-inner {
+  max-width: var(--pb-wrap);
+  margin: 0 auto;
+  padding: 0 var(--pb-gap);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  gap: 1rem;
+}
+.pb-nav-logo {
+  font-family: ui-monospace, monospace;
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: var(--pb-ink);
+  text-decoration: none;
+}
+.pb-nav-links { display: flex; align-items: center; gap: 1.5rem; }
+.pb-nav-link {
+  font-size: 0.9rem;
+  color: var(--pb-ink-soft);
+  text-decoration: none;
+}
+.pb-main {
+  max-width: var(--pb-wrap);
+  margin: 0 auto;
+  padding: 3rem var(--pb-gap) 4rem;
+}
+.pb-lead { margin: 0; color: var(--pb-ink-soft); font-size: 1.05rem; }
+.pb-post-title {
+  margin: 0 0 0.3rem;
+  font-family: Georgia, serif;
+  font-size: 1.3rem;
+  line-height: 1.25;
+  font-weight: 400;
+}
+.pb-post-title a { color: var(--pb-ink); text-decoration: none; }

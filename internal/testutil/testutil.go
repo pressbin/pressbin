@@ -48,7 +48,9 @@ func TestConfig() *config.Config {
 // TestAssets is a minimal embedded asset tree for HTTP tests.
 func TestAssets() fs.FS {
 	return fstest.MapFS{
-		"assets/style.css": &fstest.MapFile{Data: []byte("body { margin: 0; }")},
+		"assets/style.css":                              &fstest.MapFile{Data: []byte("body { margin: 0; }")},
+		"assets/htmx.min.js":                            &fstest.MapFile{Data: []byte("/* htmx test stub */")},
+		"assets/fonts/dm-sans.woff2":                    &fstest.MapFile{Data: []byte("wOFF")},
 	}
 }
 
